@@ -1,0 +1,243 @@
+.product-table-container {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+}
+
+.table-header {
+    padding: 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.table-header h2 {
+    font-size: 20px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.product-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.product-table thead {
+    background: var(--bg-lighter);
+}
+
+.product-table th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.product-table tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.2s ease;
+}
+
+.product-table tbody tr:hover {
+    background: var(--bg-lighter);
+}
+
+.product-table td {
+    padding: 16px;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.product-name {
+    font-weight: 600;
+}
+
+.product-price {
+    font-weight: 600;
+    color: var(--success);
+}
+
+.badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-category {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.badge-success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-stock {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 700;
+}
+
+.badge-stock-ok {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-stock-low {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-action {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-edit {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.btn-edit:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-delete {
+    background: #fee2e2;
+    color: var(--danger);
+}
+
+.btn-delete:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.empty-state {
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+@media (max-width: 768px) {
+    .table-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .table-header h2 {
+        font-size: 18px;
+    }
+
+    .product-table {
+        font-size: 12px;
+    }
+
+    .product-table th,
+    .product-table td {
+        padding: 12px 8px;
+    }
+}
+
+@media (max-width: 640px) {
+    .table-wrapper {
+        overflow: visible;
+    }
+
+    .product-table,
+    .product-table thead,
+    .product-table tbody,
+    .product-table th,
+    .product-table td,
+    .product-table tr {
+        display: block;
+        width: 100%;
+    }
+
+    .product-table thead {
+        display: none;
+    }
+
+    .product-table tbody tr {
+        margin: 12px 12px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        background: var(--card-bg);
+        box-shadow: var(--card-shadow);
+        padding: 8px 0;
+    }
+
+    .product-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border-light);
+        font-size: 14px;
+        gap: 12px;
+    }
+
+    .product-table td:last-child {
+        border-bottom: none;
+    }
+
+    .product-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-secondary);
+        flex: 0 0 40%;
+    }
+
+    .product-name {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .action-buttons {
+        justify-content: flex-end;
+        width: 100%;
+    }
+}
