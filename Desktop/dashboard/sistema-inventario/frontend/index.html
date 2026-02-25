@@ -1,0 +1,2464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stocklin - Sistema de Gestión de Inventario</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        :root {
+            /* Colores base Gymove */
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #dbeafe;
+            --success: #10b981;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --warning: #f59e0b;
+            
+            /* Texto */
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            
+            /* Fondos */
+            --bg-main: #f8fafc;
+            --bg-light: #ffffff;
+            --bg-lighter: #f1f5f9;
+            --bg-gradient-start: #f8fafc;
+            --bg-gradient-end: #e0e7ff;
+            
+            /* Tarjetas y contenedores */
+            --card-bg: #ffffff;
+            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            --card-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            
+            /* Bordes */
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            
+            /* Inputs */
+            --input-bg: #ffffff;
+            --input-border: #e2e8f0;
+            --input-focus: #3b82f6;
+            
+            /* Stats Cards Colors (Pastel) */
+            --stat-green-bg: #d1fae5;
+            --stat-green-icon: #10b981;
+            --stat-purple-bg: #e9d5ff;
+            --stat-purple-icon: #a855f7;
+            --stat-orange-bg: #fed7aa;
+            --stat-orange-icon: #f97316;
+            --stat-blue-bg: #bfdbfe;
+            --stat-blue-icon: #3b82f6;
+            
+            /* Alerts */
+            --success-bg: #ecfdf5;
+            --success-color: #065f46;
+            --success-border: #d1fae5;
+            --error-bg: #fef2f2;
+            --error-color: #991b1b;
+            --error-border: #fee2e2;
+            
+            --code-bg: #f0f4ff;
+            --radius: 12px;
+            --radius-lg: 24px;
+        }
+
+        [data-theme="dark"] {
+            /* Colores base Dark Mode */
+            --primary: #60a5fa;
+            --primary-dark: #3b82f6;
+            --primary-light: #1e3a8a;
+            --danger-hover: #f87171;
+            
+            /* Texto */
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            
+            /* Fondos oscuros azulados */
+            --bg-main: #020617;
+            --bg-light: #0f172a;
+            --bg-lighter: #1e293b;
+            --bg-gradient-start: #020617;
+            --bg-gradient-end: #0f172a;
+            
+            /* Tarjetas */
+            --card-bg: #0f172a;
+            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+            --card-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+            
+            /* Bordes */
+            --border-color: #1e293b;
+            --border-light: #334155;
+            
+            /* Inputs */
+            --input-bg: #1e293b;
+            --input-border: #334155;
+            --input-focus: #60a5fa;
+            
+            /* Stats Cards Dark */
+            --stat-green-bg: rgba(16, 185, 129, 0.2);
+            --stat-green-icon: #34d399;
+            --stat-purple-bg: rgba(168, 85, 247, 0.2);
+            --stat-purple-icon: #c084fc;
+            --stat-orange-bg: rgba(249, 115, 22, 0.2);
+            --stat-orange-icon: #fb923c;
+            --stat-blue-bg: rgba(59, 130, 246, 0.2);
+            --stat-blue-icon: #60a5fa;
+            
+            /* Alerts Dark */
+            --success-bg: rgba(16, 185, 129, 0.15);
+            --success-color: #6ee7b7;
+            --success-border: rgba(16, 185, 129, 0.3);
+            --error-bg: rgba(239, 68, 68, 0.15);
+            --error-color: #fca5a5;
+            --error-border: rgba(239, 68, 68, 0.3);
+            
+            --code-bg: rgba(96, 165, 250, 0.15);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            min-height: 100vh;
+            color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* ===== LOGIN SCREEN ===== */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            padding: 20px;
+        }
+
+        .login-box {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 400px;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .login-form .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .login-form label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .login-form input {
+            padding: 12px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            background: var(--bg-light);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .login-button {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .login-button:hover {
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .login-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .login-error {
+            padding: 12px 14px;
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: var(--radius);
+            color: #c33;
+            font-size: 14px;
+            display: none;
+        }
+
+        .login-error.show {
+            display: block;
+        }
+
+        .login-demo {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .login-demo code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--primary);
+            font-family: 'Courier New', monospace;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== DASHBOARD SCREEN ===== */
+        .dashboard-container {
+            display: flex;
+            height: 100vh;
+            background: var(--bg-main);
+        }
+
+        .dashboard-container.hidden {
+            display: none;
+        }
+
+        .dashboard-container.visible {
+            display: flex;
+        }
+
+        .login-container.hidden {
+            display: none;
+        }
+
+        .login-container.visible {
+            display: flex;
+        }
+
+        /* Sidebar Gymove Style - Blanco puro con iconos minimalistas */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-light);
+            padding: 32px 0;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 32px 24px;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 24px;
+        }
+
+        .sidebar-title {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .sidebar-menu {
+            padding: 0 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .sidebar-menu-item:hover {
+            background: var(--bg-lighter);
+            color: var(--text-primary);
+        }
+
+        .sidebar-menu-item.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .sidebar-menu-item i {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Topbar Gymove Style - Limpio con búsqueda centrada */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-light);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .topbar-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .topbar-search {
+            position: relative;
+            width: 400px;
+        }
+
+        .topbar-search input {
+            width: 100%;
+            padding: 10px 16px 10px 42px;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            font-size: 14px;
+            background: var(--bg-lighter);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .topbar-search input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--bg-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .topbar-search i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .topbar-icons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topbar-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-lighter);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+
+        .topbar-icon-btn:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .topbar-icon-btn .badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+            border: 2px solid var(--bg-light);
+        }
+
+        .topbar-user {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px 8px 8px;
+            border-radius: 24px;
+            background: var(--bg-lighter);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .topbar-user:hover {
+            background: var(--border-color);
+        }
+
+        .topbar-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .topbar-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .topbar-role {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .topbar-user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--card-shadow-lg);
+            padding: 8px;
+            min-width: 220px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-lighter);
+        }
+
+        .dropdown-item.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .dropdown-item i {
+            font-size: 16px;
+            width: 18px;
+        }
+
+        /* Main content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            background: var(--bg-main);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            margin-bottom: 24px;
+            padding: 32px 32px 0 32px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Stats Cards - Bento Grid Style Gymove */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            padding: 0 32px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-light);
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow-lg);
+        }
+
+        .stat-card.selected {
+            border-color: var(--primary);
+            box-shadow: 0 10px 24px rgba(59, 130, 246, 0.18);
+        }
+
+        .stat-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .stat-card.green .stat-icon {
+            background: var(--stat-green-bg);
+            color: var(--stat-green-icon);
+        }
+
+        .stat-card.purple .stat-icon {
+            background: var(--stat-purple-bg);
+            color: var(--stat-purple-icon);
+        }
+
+        .stat-card.orange .stat-icon {
+            background: var(--stat-orange-bg);
+            color: var(--stat-orange-icon);
+        }
+
+        .stat-card.blue .stat-icon {
+            background: var(--stat-blue-bg);
+            color: var(--stat-blue-icon);
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .stat-progress {
+            margin-top: 8px;
+            height: 4px;
+            background: var(--bg-lighter);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .stat-progress-bar {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .stat-card.green .stat-progress-bar {
+            background: var(--stat-green-icon);
+        }
+
+        .stat-card.purple .stat-progress-bar {
+            background: var(--stat-purple-icon);
+        }
+
+
+        /* Table Section - Gymove Style */
+        .table-section {
+            padding: 0 32px 32px 32px;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-search {
+            position: relative;
+            width: 320px;
+        }
+
+        .table-search input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 14px;
+            background: var(--bg-light);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .table-search input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .table-search i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .new-socio-btn {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .new-socio-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .new-socio-btn i {
+            font-size: 16px;
+        }
+
+        /* Table Container - Rounded 3xl with soft shadow */
+        .table-container {
+            overflow: hidden;
+            background: var(--bg-light);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-lighter);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-lighter);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Form section */
+        .form-section {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: var(--radius);
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px);
+        }
+
+        .form-section h2 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--bg-lighter);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-lighter);
+        }
+
+        /* Message alerts */
+        .alert {
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            animation: slideDown 0.3s ease;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            color: var(--success-color);
+        }
+
+        .alert-error {
+            background: var(--error-bg);
+            border: 1px solid var(--error-border);
+            color: var(--error-color);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Table */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 8px 14px;
+            font-size: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: var(--danger-hover);
+        }
+
+        .estado-activo {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--success-bg);
+            color: var(--success-color);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .estado-inactivo {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--error-bg);
+            color: var(--error-color);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.35);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--radius);
+            max-width: 520px;
+            width: 100%;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(14px);
+            transform: scale(0.92);
+            transition: transform 0.25s ease;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--bg-lighter);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .table-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin: 0 0 12px 0;
+        }
+
+        .new-socio-btn {
+            padding: 10px 14px;
+            background: linear-gradient(135deg, #67e8f9, #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 12px 24px rgba(59, 130, 246, 0.35);
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .new-socio-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 28px rgba(59, 130, 246, 0.45);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* ==================== VISTAS PRINCIPALES ==================== */
+        .dashboard-view {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .reports-view {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* ==================== REPORTES SECTION ==================== */
+        .reports-section {
+            padding: 32px 32px 32px 32px;
+            width: 100%;
+            max-width: 100%;
+            background: var(--bg-main);
+        }
+
+        .reports-header {
+            padding-top: 0;
+            margin-bottom: 32px;
+        }
+
+        .reports-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .reports-header p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Bento Grid para tarjetas de reportes */
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .report-card {
+            background: var(--card-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        [data-theme="dark"] .report-card {
+            border-color: #334155;
+        }
+
+        .report-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(59, 130, 246, 0.15);
+        }
+
+        .report-card-icon {
+            font-size: 40px;
+            color: var(--primary);
+        }
+
+        .report-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .report-card-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Filters Section */
+        .filters-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .filters-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filters-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .checkbox-group label {
+            font-size: 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        /* Download Actions */
+        .download-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+
+        .download-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn-excel {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .download-btn-excel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(16, 185, 129, 0.3);
+        }
+
+        .download-btn-pdf {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .download-btn-pdf:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(239, 68, 68, 0.3);
+        }
+
+        .download-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 20px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .login-box {
+                padding: 30px 25px;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN SCREEN -->
+    <div id="login-container" class="login-container visible">
+        <div class="login-box">
+            <div class="login-title">Stocklin</div>
+            <div class="login-subtitle">Inicia sesión en tu sistema de inventario</div>
+            
+            <form id="login-form" class="login-form">
+                <div class="login-error" id="login-error"></div>
+                
+                <div class="form-group">
+                    <label for="login-username">Usuario</label>
+                    <input 
+                        type="text"
+                        id="login-username"
+                        placeholder="Tu usuario"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="login-password">Contraseña</label>
+                    <input 
+                        type="password"
+                        id="login-password"
+                        placeholder="Tu contraseña"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="login-button">Entrar</button>
+            </form>
+
+            <div class="login-demo">
+                <strong>Credenciales de prueba:</strong><br>
+                Usuario: <code>admin</code><br>
+                Contraseña: <code>123456</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD SCREEN -->
+    <div id="dashboard-container" class="dashboard-container hidden">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <i class="fas fa-box"></i>
+                    Stocklin.
+                </div>
+                <div class="sidebar-subtitle">Gestión de Inventario</div>
+            </div>
+            
+            <!-- Sidebar Menu -->
+            <div class="sidebar-menu">
+                <div class="sidebar-menu-item active" data-menu="dashboard">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </div>
+                <div class="sidebar-menu-item" data-menu="productos">
+                    <i class="fas fa-boxes"></i>
+                    <span>Productos</span>
+                </div>
+                <div class="sidebar-menu-item" data-menu="almacen">
+                    <i class="fas fa-warehouse"></i>
+                    <span>Almacén</span>
+                </div>
+                <div class="sidebar-menu-item" data-menu="categorias">
+                    <i class="fas fa-tag"></i>
+                    <span>Categorías</span>
+                </div>
+                <div class="sidebar-menu-item" data-menu="reportes">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reportes</span>
+                </div>
+                <div class="sidebar-menu-item" data-menu="exportar">
+                    <i class="fas fa-file-export"></i>
+                    <span>Exportar</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Topbar con búsqueda centrada -->
+            <div class="topbar">
+                <div class="topbar-left">
+                    <div class="topbar-logo">Dashboard</div>
+                </div>
+                
+                <div class="topbar-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar algo..." id="topbar-search">
+                </div>
+
+                <div class="topbar-right">
+                    <div class="topbar-icons">
+                        <button class="topbar-icon-btn" title="Reportes">
+                            <i class="fas fa-chart-line"></i>
+                        </button>
+                        <button class="topbar-icon-btn" title="Historial">
+                            <i class="fas fa-history"></i>
+                        </button>
+                        <button class="topbar-icon-btn" title="Descargar">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="topbar-user">
+                        <div class="topbar-user-info">
+                            <div class="topbar-name" id="usuario-nombre">rudivera</div>
+                            <div class="topbar-role">Super Admin</div>
+                        </div>
+                        <div class="topbar-avatar" id="avatar-btn">R</div>
+                        
+                        <div class="user-dropdown" id="user-dropdown">
+                            <div class="dropdown-item" id="theme-toggle">
+                                <i class="fas fa-moon" id="theme-icon"></i>
+                                <span id="theme-text">Modo Oscuro</span>
+                            </div>
+                            <div class="dropdown-item" id="settings-btn">
+                                <i class="fas fa-cog"></i>
+                                <span>Configuración</span>
+                            </div>
+                            <div class="dropdown-item danger" id="dropdown-logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Cerrar Sesión</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard View -->
+            <div class="dashboard-view" id="dashboard-view">
+                <!-- Header -->
+                <div class="header">
+                    <h1>Panel de Inventario</h1>
+                    <p>Gestiona tu inventario de productos</p>
+                </div>
+
+                <!-- Messages -->
+                <div id="alert-container"></div>
+
+                <!-- Stats Cards - Bento Grid -->
+                <div class="stats-grid">
+                <div class="stat-card green" data-filter="all">
+                    <div class="stat-icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Total Productos</div>
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-progress">
+                            <div class="stat-progress-bar" style="width: 42%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card purple" data-filter="low-stock">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Stock Bajo</div>
+                        <div class="stat-value" id="stat-activos">0</div>
+                        <div class="stat-progress">
+                            <div class="stat-progress-bar" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card orange" data-filter="value">
+                    <div class="stat-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Valor Total Inventario</div>
+                        <div class="stat-value" id="stat-inactivos">$0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card blue" data-filter="active">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Productos Activos</div>
+                        <div class="stat-value" id="stat-premium">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Section -->
+            <div class="table-section">
+                <div class="table-header">
+                    <div class="table-search">
+                        <i class="fas fa-search"></i>
+                        <input 
+                            type="text"
+                            id="busqueda"
+                            placeholder="Buscar por nombre o código..."
+                        >
+                    </div>
+                    <button id="nuevo-socio-btn" class="new-socio-btn">
+                        <i class="fas fa-plus"></i>
+                        Agregar Producto
+                    </button>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Producto</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-socios">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="fas fa-inbox"></i>
+                                </div>
+                                Cargando socios...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div>
+
+        <!-- Reports View -->
+        <div class="reports-view" id="reports-view">
+            <div class="reports-section" id="reports-section">
+                <div class="reports-header">
+                    <h1>Centro de Reportes</h1>
+                    <p>Descarga y exporta tus datos de inventario en diferentes formatos</p>
+                </div>
+
+                <!-- Tarjetas Bento de Reportes -->
+                <div class="reports-grid">
+                <!-- Excel Card -->
+                <div class="report-card" id="excel-card">
+                    <div class="report-card-icon">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <div class="report-card-title">Exportar a Excel</div>
+                    <div class="report-card-description">Descarga un archivo .xlsx con todos tus productos y detalles. Compatible con Microsoft Excel y Google Sheets.</div>
+                </div>
+
+                <!-- PDF Card -->
+                <div class="report-card" id="pdf-card">
+                    <div class="report-card-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="report-card-title">Exportar a PDF</div>
+                    <div class="report-card-description">Genera un reporte profesional en PDF con el logo y detalles formateados para imprimir o compartir.</div>
+                </div>
+                </div>
+
+                <!-- Filtros de Exportación -->
+                <div class="filters-section">
+                <div class="filters-title">
+                    <i class="fas fa-sliders-h"></i>
+                    Opciones de Filtrado
+                </div>
+                <div class="filters-content">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="incluir-agotados" checked>
+                        <label for="incluir-agotados">Incluir productos agotados</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="incluir-precios" checked>
+                        <label for="incluir-precios">Incluir precios de costo</label>
+                    </div>
+                </div>
+
+                <!-- Download Buttons -->
+                <div class="download-actions">
+                    <button class="download-btn download-btn-excel" id="btn-descargar-excel">
+                        <i class="fas fa-download"></i>
+                        Descargar Excel
+                    </button>
+                    <button class="download-btn download-btn-pdf" id="btn-descargar-pdf">
+                        <i class="fas fa-download"></i>
+                        Descargar PDF
+                    </button>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Editar Producto</div>
+            <div class="modal-body">
+                <form id="editar-form" class="form-grid">
+                    <input type="hidden" id="editar-id">
+                    
+                    <div class="form-group">
+                        <label for="editar-nombre">Nombre del Producto</label>
+                        <input type="text" id="editar-nombre" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editar-dni">Código de Producto</label>
+                        <input type="text" id="editar-dni" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editar-plan">Categoría</label>
+                        <select id="editar-plan" required>
+                            <option value="Electrónica">Electrónica</option>
+                            <option value="Ropa">Ropa</option>
+                            <option value="Alimentos">Alimentos</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editar-fecha_pago">Precio</label>
+                        <input type="number" id="editar-fecha_pago" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editar-estado">Stock</label>
+                        <input type="number" id="editar-estado" min="0" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="editar-btn-cancelar" class="btn btn-secondary">Cancelar</button>
+                <button id="editar-btn-guardar" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Registrar Nuevo Producto</div>
+            <div class="modal-body">
+                <form id="registro-form" class="form-grid">
+                    <div class="form-group">
+                        <label for="nombre">Nombre del Producto</label>
+                        <input type="text" id="nombre" placeholder="Nombre del producto" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dni">Código de Producto</label>
+                        <input type="text" id="dni" placeholder="Código SKU" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="plan">Categoría</label>
+                        <select id="plan" required>
+                            <option value="">Seleccionar categoría</option>
+                            <option value="Electrónica">Electrónica</option>
+                            <option value="Ropa">Ropa</option>
+                            <option value="Alimentos">Alimentos</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fecha_pago">Precio</label>
+                        <input type="number" id="fecha_pago" placeholder="Precio del producto" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="stock">Stock</label>
+                        <input type="number" id="stock" placeholder="Cantidad en inventario" min="0" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                        <button type="button" id="registro-btn-cancelar" class="btn btn-secondary">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Confirmar eliminación</div>
+            <div class="modal-body">
+                <p id="delete-mensaje"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="delete-cancelar" class="btn btn-secondary">Cancelar</button>
+                <button id="delete-confirmar" class="btn btn-delete">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        // ==========================================
+        // CONFIGURACIÓN GENERAL
+        // ==========================================
+        const API_URL = 'http://localhost:5000';
+        const loginScreen = document.getElementById('login-container');
+        const dashboardScreen = document.getElementById('dashboard-container');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const loginUsername = document.getElementById('login-username');
+        const loginPassword = document.getElementById('login-password');
+
+        // ==========================================
+        // GESTIÓN DE SESIÓN Y AUTENTICACIÓN
+        // ==========================================
+
+        function verificarSesion() {
+            const sesionGuardada = localStorage.getItem('sesion');
+            if (sesionGuardada) {
+                try {
+                    const usuario = JSON.parse(sesionGuardada);
+                    mostrarDashboard(usuario);
+                } catch (e) {
+                    mostrarLogin();
+                }
+            } else {
+                mostrarLogin();
+            }
+        }
+
+        function mostrarLogin() {
+            loginScreen.classList.remove('hidden');
+            loginScreen.classList.add('visible');
+            dashboardScreen.classList.remove('visible');
+            dashboardScreen.classList.add('hidden');
+            loginForm.reset();
+            loginError.classList.remove('show');
+        }
+
+        function mostrarDashboard(usuario) {
+            loginScreen.classList.remove('visible');
+            loginScreen.classList.add('hidden');
+            dashboardScreen.classList.add('visible');
+            dashboardScreen.classList.remove('hidden');
+            
+            document.getElementById('usuario-nombre').textContent = usuario.username;
+            obtenerSocios();
+        }
+
+        // ==========================================
+        // MANEJO DEL LOGIN
+        // ==========================================
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = loginUsername.value.trim();
+            const password = loginPassword.value;
+
+            if (!username || !password) {
+                mostrarError('Por favor completa todos los campos');
+                return;
+            }
+
+            const btn = loginForm.querySelector('.login-button');
+            const textoOriginal = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Validando...';
+
+            try {
+                const response = await axios.post(`${API_URL}/api/login`, {
+                    username,
+                    password
+                });
+
+                if (response.data.success) {
+                    localStorage.setItem('sesion', JSON.stringify(response.data.usuario));
+                    mostrarDashboard(response.data.usuario);
+                }
+            } catch (error) {
+                let mensaje = 'Error al conectar con el servidor';
+                if (error.response?.data?.error) {
+                    mensaje = error.response.data.error;
+                }
+                mostrarError(mensaje);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = textoOriginal;
+            }
+        });
+
+        function mostrarError(mensaje) {
+            loginError.textContent = mensaje;
+            loginError.classList.add('show');
+            setTimeout(() => {
+                loginError.classList.remove('show');
+            }, 5000);
+        }
+
+        // ==========================================
+        // DROPDOWN Y CIERRE DE SESIÓN
+        // ==========================================
+
+        const avatarBtn = document.getElementById('avatar-btn');
+        const userDropdown = document.getElementById('user-dropdown');
+        const dropdownLogout = document.getElementById('dropdown-logout');
+
+        // Toggle dropdown
+        avatarBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+        });
+
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', (e) => {
+            if (!userDropdown.contains(e.target) && e.target !== avatarBtn) {
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        // Logout
+        dropdownLogout.addEventListener('click', () => {
+            userDropdown.classList.remove('show');
+            const confirmar = confirm('¿Cerrar sesión?');
+            if (confirmar) {
+                localStorage.removeItem('sesion');
+                mostrarLogin();
+            }
+        });
+
+        // ==========================================
+        // CAMBIO DE TEMA
+        // ==========================================
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const themeText = document.getElementById('theme-text');
+
+        // Cargar tema guardado
+        function cargarTema() {
+            const temaGuardado = localStorage.getItem('tema') || 'light';
+            document.documentElement.setAttribute('data-theme', temaGuardado);
+            actualizarIconoTema(temaGuardado);
+        }
+
+        function actualizarIconoTema(tema) {
+            if (tema === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+                themeText.textContent = 'Modo Claro';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                themeText.textContent = 'Modo Oscuro';
+            }
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const temaActual = document.documentElement.getAttribute('data-theme') || 'light';
+            const nuevoTema = temaActual === 'light' ? 'dark' : 'light';
+            
+            document.documentElement.setAttribute('data-theme', nuevoTema);
+            localStorage.setItem('tema', nuevoTema);
+            actualizarIconoTema(nuevoTema);
+            userDropdown.classList.remove('show');
+        });
+
+        // Cargar tema al inicio
+        cargarTema();
+
+        // ==========================================
+        // VARIABLES GLOBALES
+        // ==========================================
+
+        let sociosActuales = [];
+        let sociosCache = [];
+        const busquedaInput = document.getElementById('busqueda');
+        const tablaSocios = document.getElementById('tabla-socios');
+        const registroForm = document.getElementById('registro-form');
+        const alertContainer = document.getElementById('alert-container');
+
+        const editModal = document.getElementById('edit-modal');
+        const editForm = document.getElementById('editar-form');
+        const deleteModal = document.getElementById('delete-modal');
+        const registerModal = document.getElementById('register-modal');
+        const nuevoSocioBtn = document.getElementById('nuevo-socio-btn');
+        const registroCancelarBtn = document.getElementById('registro-btn-cancelar');
+        let idEditar = null;
+        let idEliminar = null;
+        let filtroTabla = 'all';
+
+        // ==========================================
+        // FUNCIONES DE SOCIOS
+        // ==========================================
+
+        async function obtenerSocios() {
+            try {
+                const response = await axios.get(`${API_URL}/api/socios`);
+                sociosCache = response.data;
+                sociosActuales = sociosCache;
+                aplicarFiltroTabla();
+                actualizarEstadisticas(sociosCache);
+            } catch (error) {
+                mostrarAlerta('Error al obtener socios', 'error');
+                console.error(error);
+            }
+        }
+
+        // Actualizar tarjetas de estadísticas
+        function actualizarEstadisticas(socios) {
+            const total = socios.length;  // Total de productos en inventario
+            const stockBajo = socios.filter(s => parseInt(s.stock) < 5).length;  // Productos con stock < 5
+            const valorTotal = socios.reduce((sum, s) => sum + (parseFloat(s.fecha_pago) || 0), 0);  // suma de precios unitarios
+            const productosActivos = socios.filter(s => s.estado && s.estado.toLowerCase() === 'activo').length;  // Solo productos activos
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-activos').textContent = stockBajo;
+            document.getElementById('stat-inactivos').textContent = `$${valorTotal.toFixed(2)}`;
+            document.getElementById('stat-premium').textContent = productosActivos;
+        }
+
+        function filtrarSocios(termino) {
+            const terminoLower = termino.toLowerCase();
+            const filtrados = sociosCache.filter(socio =>
+                socio.nombre.toLowerCase().includes(terminoLower) ||
+                socio.dni.toLowerCase().includes(terminoLower)
+            );
+            sociosActuales = filtrados;
+            renderizarTabla(filtrados);
+        }
+
+        function aplicarFiltroTabla() {
+            let filtrados = sociosCache;
+
+            if (filtroTabla === 'low-stock') {
+                filtrados = sociosCache.filter(socio => parseInt(socio.stock) < 5);
+            }
+
+            sociosActuales = filtrados;
+            renderizarTabla(filtrados);
+            marcarTarjetaSeleccionada();
+        }
+
+        function marcarTarjetaSeleccionada() {
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.classList.toggle('selected', card.dataset.filter === filtroTabla);
+            });
+        }
+
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const filtro = card.dataset.filter;
+
+                if (filtro === 'low-stock') {
+                    filtroTabla = 'low-stock';
+                } else if (filtro === 'all') {
+                    filtroTabla = 'all';
+                } else {
+                    return;
+                }
+
+                aplicarFiltroTabla();
+            });
+        });
+
+        function renderizarTabla(socios) {
+            if (socios.length === 0) {
+                const mensaje = filtroTabla === 'low-stock'
+                    ? '¡Todo está abastecido! No hay productos con stock crítico'
+                    : 'No hay productos registrados';
+                tablaSocios.innerHTML = `<tr><td colspan="7" class="empty-state"><div class="empty-state-icon"><i class="fas fa-inbox"></i></div>${mensaje}</td></tr>`;
+                return;
+            }
+
+            tablaSocios.innerHTML = socios.map(socio => `
+                <tr>
+                    <td>${socio.id}</td>
+                    <td>${socio.nombre}</td>
+                    <td>${socio.plan}</td>
+                    <td>$${parseFloat(socio.fecha_pago).toFixed(2)}</td>
+                    <td>${socio.stock}</td>
+                    <td>
+                        <span class="estado-${socio.estado ? socio.estado.toLowerCase() : 'activo'}">
+                            ${socio.estado || 'Activo'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-sm btn-edit" onclick="abrirEditar(${socio.id})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-sm btn-delete" onclick="abrirEliminar(${socio.id}, '${socio.nombre}')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ==========================================
+        // FORMULARIO DE REGISTRO
+        // ==========================================
+
+        registroForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nombre = document.getElementById('nombre').value.trim();
+            const dni = document.getElementById('dni').value.trim();
+            const plan = document.getElementById('plan').value;
+            const fecha_pago = document.getElementById('fecha_pago').value;
+            const stock = document.getElementById('stock').value;
+
+            if (!nombre || !dni || !plan || !fecha_pago || stock === '') {
+                mostrarAlerta('Por favor completa todos los campos', 'error');
+                return;
+            }
+
+            try {
+                await axios.post(`${API_URL}/api/registrar`, {
+                    nombre,
+                    dni,
+                    plan,
+                    fecha_pago,
+                    stock
+                });
+
+                mostrarAlerta('Producto registrado correctamente', 'success');
+                registroForm.reset();
+                registerModal.classList.remove('show');
+                await obtenerSocios();
+            } catch (error) {
+                const mensaje = error.response?.data?.error || 'Error al registrar';
+                mostrarAlerta(mensaje, 'error');
+            }
+        });
+
+        // ==========================================
+        // EDICIÓN
+        // ==========================================
+
+        function abrirEditar(id) {
+            const socio = sociosActuales.find(s => s.id === id);
+            if (!socio) return;
+
+            idEditar = id;
+            document.getElementById('editar-id').value = socio.id;
+            document.getElementById('editar-nombre').value = socio.nombre;
+            document.getElementById('editar-dni').value = socio.dni;
+            document.getElementById('editar-plan').value = socio.plan;
+            document.getElementById('editar-fecha_pago').value = socio.fecha_pago;
+            document.getElementById('editar-estado').value = socio.stock;  // stock (número)
+
+            editModal.classList.add('show');
+        }
+
+        document.getElementById('editar-btn-cancelar').addEventListener('click', () => {
+            editModal.classList.remove('show');
+        });
+
+        nuevoSocioBtn.addEventListener('click', () => {
+            registerModal.classList.add('show');
+        });
+
+        registroCancelarBtn.addEventListener('click', () => {
+            registerModal.classList.remove('show');
+        });
+
+        document.getElementById('editar-btn-guardar').addEventListener('click', async () => {
+            const nombre = document.getElementById('editar-nombre').value.trim();
+            const dni = document.getElementById('editar-dni').value.trim();
+            const plan = document.getElementById('editar-plan').value;
+            const fecha_pago = document.getElementById('editar-fecha_pago').value;
+            const estado = document.getElementById('editar-estado').value;
+
+            if (!nombre || !dni || !plan || !fecha_pago) {
+                mostrarAlerta('Por favor completa todos los campos', 'error');
+                return;
+            }
+
+            try {
+                await axios.put(`${API_URL}/api/socios/${idEditar}`, {
+                    nombre,
+                    dni,
+                    plan,
+                    fecha_pago,
+                    estado
+                });
+
+                mostrarAlerta('Producto actualizado correctamente', 'success');
+                editModal.classList.remove('show');
+                await obtenerSocios();
+            } catch (error) {
+                const mensaje = error.response?.data?.error || 'Error al actualizar';
+                mostrarAlerta(mensaje, 'error');
+            }
+        });
+
+        // ==========================================
+        // ELIMINACIÓN
+        // ==========================================
+
+        function abrirEliminar(id, nombre) {
+            idEliminar = id;
+            document.getElementById('delete-mensaje').textContent = `¿Eliminar a ${nombre}?`;
+            deleteModal.classList.add('show');
+        }
+
+        document.getElementById('delete-cancelar').addEventListener('click', () => {
+            deleteModal.classList.remove('show');
+        });
+
+        document.getElementById('delete-confirmar').addEventListener('click', async () => {
+            try {
+                await axios.delete(`${API_URL}/api/socios/${idEliminar}`);
+                mostrarAlerta('Producto eliminado correctamente', 'success');
+                deleteModal.classList.remove('show');
+                await obtenerSocios();
+            } catch (error) {
+                const mensaje = error.response?.data?.error || 'Error al eliminar';
+                mostrarAlerta(mensaje, 'error');
+            }
+        });
+
+        // ==========================================
+        // BÚSQUEDA EN TIEMPO REAL
+        // ==========================================
+
+        busquedaInput.addEventListener('input', (e) => {
+            filtrarSocios(e.target.value);
+        });
+
+        // ==========================================
+        // ALERTAS
+        // ==========================================
+
+        function mostrarAlerta(mensaje, tipo) {
+            const alerta = document.createElement('div');
+            alerta.className = `alert alert-${tipo} show`;
+            alerta.textContent = mensaje;
+            alertContainer.appendChild(alerta);
+
+            setTimeout(() => {
+                alerta.remove();
+            }, 4000);
+        }
+
+        // ==========================================
+        // CERRAR MODALES CON ESC
+        // ==========================================
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                editModal.classList.remove('show');
+                deleteModal.classList.remove('show');
+                registerModal.classList.remove('show');
+            }
+        });
+
+        // ==========================================
+        // CENTRO DE REPORTES - EXPORTACIÓN
+        // ==========================================
+
+        const dashboardView = document.getElementById('dashboard-view');
+        const reportsView = document.getElementById('reports-view');
+        const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
+        const excelCard = document.getElementById('excel-card');
+        const pdfCard = document.getElementById('pdf-card');
+        const btnDescargarExcel = document.getElementById('btn-descargar-excel');
+        const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
+        const checkboxAgotados = document.getElementById('incluir-agotados');
+        const checkboxPrecios = document.getElementById('incluir-precios');
+
+        // Cambiar entre vistas
+        function cambiarVista(vista) {
+            // Esta función SOLO cambia la visibilidad de las vistas
+            // Los estilos .active del sidebar son manejados por el event listener
+            
+            if (vista === 'dashboard') {
+                dashboardView.style.display = 'block';
+                reportsView.style.display = 'none';
+            } else if (vista === 'reportes') {
+                dashboardView.style.display = 'none';
+                reportsView.style.display = 'block';
+            }
+        }
+
+        // Aplicar filtros a los datos
+        function aplicarFiltrosExportacion(datos) {
+            let filtrados = [...datos];
+
+            // Filtrar productos agotados si no está marcado
+            if (!checkboxAgotados.checked) {
+                filtrados = filtrados.filter(p => parseInt(p.stock) > 0);
+            }
+
+            // Si no incluir precios, remover la columna
+            if (!checkboxPrecios.checked) {
+                filtrados = filtrados.map(({ fecha_pago, ...rest }) => rest);
+            }
+
+            return filtrados;
+        }
+
+        // Exportar a Excel
+        function exportarExcel() {
+            try {
+                if (sociosCache.length === 0) {
+                    mostrarAlerta('No hay datos para exportar', 'warning');
+                    return;
+                }
+
+                const datos = aplicarFiltrosExportacion(sociosCache);
+                
+                // Preparar datos con nombres de columnas limpios
+                const datosExportacion = datos.map(producto => {
+                    const fila = {
+                        'ID': producto.id,
+                        'Producto': producto.nombre,
+                        'Código': producto.dni,
+                        'Categoría': producto.plan,
+                    };
+                    
+                    if (checkboxPrecios.checked) {
+                        fila['Precio ($)'] = producto.fecha_pago;
+                    }
+                    
+                    fila['Stock'] = producto.stock;
+                    fila['Estado'] = producto.estado;
+                    
+                    return fila;
+                });
+
+                // Crear workbook y worksheet
+                const ws = XLSX.utils.json_to_sheet(datosExportacion);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+
+                // Ajustar ancho de columnas
+                const colWidths = [
+                    { wch: 8 },   // ID
+                    { wch: 25 },  // Producto
+                    { wch: 15 },  // Código
+                    { wch: 15 },  // Categoría
+                    { wch: 12 },  // Precio
+                    { wch: 10 },  // Stock
+                    { wch: 12 }   // Estado
+                ];
+                ws['!cols'] = colWidths;
+
+                // Generar nombre del archivo con fecha
+                const fecha = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
+                const nombreArchivo = `Inventario_Stocklin_${fecha}.xlsx`;
+
+                // Descargar
+                XLSX.writeFile(wb, nombreArchivo);
+                mostrarAlerta(`Excel descargado: ${nombreArchivo}`, 'success');
+            } catch (error) {
+                mostrarAlerta('Error al descargar Excel', 'error');
+                console.error(error);
+            }
+        }
+
+        // Exportar a PDF
+        function exportarPdf() {
+            try {
+                if (sociosCache.length === 0) {
+                    mostrarAlerta('No hay datos para exportar', 'warning');
+                    return;
+                }
+
+                const datos = aplicarFiltrosExportacion(sociosCache);
+                const fecha = new Date().toLocaleDateString('es-ES');
+                const hora = new Date().toLocaleTimeString('es-ES');
+
+                // Crear HTML para PDF
+                let html = `
+                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                        <!-- Header con logo -->
+                        <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #3b82f6; padding-bottom: 20px;">
+                            <h1 style="color: #3b82f6; margin: 0; font-size: 28px;">
+                                <i style="color: #3b82f6;">📦</i> Stocklin
+                            </h1>
+                            <p style="color: #666; margin: 5px 0; font-size: 12px;">Sistema de Gestión de Inventario</p>
+                        </div>
+
+                        <!-- Información del reporte -->
+                        <div style="margin-bottom: 25px; background: #f0f4ff; padding: 15px; border-radius: 8px;">
+                            <h2 style="font-size: 18px; color: #2563eb; margin: 0 0 10px 0;">Reporte de Inventario</h2>
+                            <p style="margin: 5px 0; font-size: 12px;">
+                                <strong>Fecha:</strong> ${fecha} | <strong>Hora:</strong> ${hora}
+                            </p>
+                            <p style="margin: 5px 0; font-size: 12px;">
+                                <strong>Total de productos:</strong> ${datos.length}
+                            </p>
+                        </div>
+
+                        <!-- Tabla -->
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 11px;">
+                            <thead>
+                                <tr style="background: #3b82f6; color: white;">
+                                    <th style="border: 1px solid #ddd; padding: 10px;">ID</th>
+                                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Producto</th>
+                                    <th style="border: 1px solid #ddd; padding: 10px;">Código</th>
+                                    <th style="border: 1px solid #ddd; padding: 10px;">Categoría</th>
+                                    ${checkboxPrecios.checked ? '<th style="border: 1px solid #ddd; padding: 10px;">Precio</th>' : ''}
+                                    <th style="border: 1px solid #ddd; padding: 10px;">Stock</th>
+                                    <th style="border: 1px solid #ddd; padding: 10px;">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+`;
+
+                // Agregar filas
+                datos.forEach((producto, index) => {
+                    const bgColor = index % 2 === 0 ? '#fff' : '#f9f9f9';
+                    const stockColor = parseInt(producto.stock) < 5 ? '#fee2e2' : bgColor;
+                    
+                    html += `
+                        <tr style="background: ${stockColor};">
+                            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${producto.id}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${producto.nombre}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${producto.dni}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${producto.plan}</td>
+                            ${checkboxPrecios.checked ? `<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${parseFloat(producto.fecha_pago).toFixed(2)}</td>` : ''}
+                            <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: 600;">${producto.stock}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                                <span style="padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; 
+                                    background: ${producto.estado === 'Activo' ? '#d1fae5' : '#fee2e2'}; 
+                                    color: ${producto.estado === 'Activo' ? '#065f46' : '#991b1b'};">
+                                    ${producto.estado}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+
+                        <!-- Footer -->
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; font-size: 11px; color: #666;">
+                            <p style="margin: 0;">Este documento fue generado automáticamente por Stocklin</p>
+                            <p style="margin: 0; font-size: 10px;">Todos los derechos reservados</p>
+                        </div>
+                    </div>
+                `;
+
+                // Configuración de html2pdf
+                const options = {
+                    margin: 10,
+                    filename: `Inventario_Stocklin_${new Date().getTime()}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a4' }
+                };
+
+                html2pdf().set(options).from(html).save();
+                mostrarAlerta('PDF descargado correctamente', 'success');
+            } catch (error) {
+                mostrarAlerta('Error al descargar PDF', 'error');
+                console.error(error);
+            }
+        }
+
+        // Event Listeners para tarjetas de reportes
+        excelCard.addEventListener('click', exportarExcel);
+        pdfCard.addEventListener('click', exportarPdf);
+        btnDescargarExcel.addEventListener('click', exportarExcel);
+        btnDescargarPdf.addEventListener('click', exportarPdf);
+
+        // Event Listeners para sidebar - cambiar de vista
+        sidebarMenuItems.forEach((item) => {
+            item.addEventListener('click', () => {
+                const menuType = item.dataset.menu; // Obtener el tipo de menú exacto
+
+                // Limpiar clase activa de TODOS los items
+                sidebarMenuItems.forEach(i => i.classList.remove('active'));
+                // Añadir clase activa solo al item clickeado
+                item.classList.add('active');
+
+                // Mostrar vista correcta basado en el tipo de menú EXACTO
+                switch (menuType) {
+                    case 'dashboard':
+                        cambiarVista('dashboard');
+                        break;
+                    case 'productos':
+                    case 'almacen':
+                    case 'categorias':
+                        // Estas vistas aún no existen, solo limpiar actuales
+                        dashboardView.style.display = 'none';
+                        reportsView.style.display = 'none';
+                        break;
+                    case 'reportes':
+                        cambiarVista('reportes');
+                        break;
+                    case 'exportar':
+                        // Exportar también lleva a reportes pero puede diferenciarse después
+                        cambiarVista('reportes');
+                        break;
+                }
+            });
+        });
+
+        // ==========================================
+        // CERRAR MODALES AL HACER CLICK FUERA
+        // ==========================================
+
+        window.addEventListener('click', (e) => {
+            if (e.target === editModal) editModal.classList.remove('show');
+            if (e.target === deleteModal) deleteModal.classList.remove('show');
+            if (e.target === registerModal) registerModal.classList.remove('show');
+        });
+
+        // ==========================================
+        // INICIALIZACIÓN
+        // ==========================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarSesion();
+            // Inicializar vistas
+            dashboardView.style.display = 'block';
+            reportsView.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
