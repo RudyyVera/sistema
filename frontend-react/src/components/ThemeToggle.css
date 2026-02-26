@@ -1,0 +1,66 @@
+/* ==========================================
+   THEME TOGGLE - ELEGANTE Y RESPONSIVO
+   ========================================== */
+
+.theme-toggle {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--border-light);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-toggle:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
+}
+
+.theme-toggle i {
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-block;
+}
+
+/* Animación de rotación suave */
+.theme-toggle:hover i {
+    animation: theme-icon-spin 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes theme-icon-spin {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+    50% {
+        transform: rotate(180deg) scale(1.15);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+/* Dark Mode Specific */
+body.dark-mode .theme-toggle {
+    background: var(--bg-lighter);
+    border-color: var(--border-color);
+}
+
+body.dark-mode .theme-toggle:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}

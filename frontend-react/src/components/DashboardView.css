@@ -1,0 +1,528 @@
+/* ==========================================
+   DASHBOARD PRO LAYOUT - COMPACTO Y PROFESIONAL
+   ========================================== */
+.dashboard-view-pro {
+    width: 100%;
+    height: calc(100vh - 80px);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 16px;
+    padding: 0;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading State */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 16px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--bg-lighter);
+    border-top: 4px solid #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ==========================================
+   TARJETAS COMPACTAS SUPERIORES - GRID 1 FILA
+   ========================================== */
+.stats-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    height: 90px;
+}
+
+.stat-card-mini {
+    background: var(--card-bg);
+    border: none;
+    border-radius: 14px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--card-shadow);
+    transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    backface-visibility: hidden;
+}
+
+.stat-card-mini:hover {
+    box-shadow: var(--card-shadow-lg);
+    transform: translateY(-1px);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.stat-icon.primary {
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    color: #6366f1;
+}
+
+.stat-icon.success {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    color: #10b981;
+}
+
+.stat-icon.danger {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    color: #ef4444;
+}
+
+.stat-icon.warning {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    color: #f59e0b;
+}
+
+.stat-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.stat-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 5px;
+    letter-spacing: -0.03em;
+}
+
+.stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ==========================================
+   GRID PRINCIPAL: 65% + 35%
+   ========================================== */
+.dashboard-grid-pro {
+    display: grid;
+    grid-template-columns: 65% 35%;
+    gap: 16px;
+    height: calc(100vh - 190px);
+    min-height: 0;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================
+   CARDS PROFESIONALES - BASE
+   ========================================== */
+.dashboard-card-pro {
+    background: var(--card-bg);
+    border: none;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.card-header-pro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.card-header-pro h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.card-header-pro h3 i {
+    font-size: 16px;
+    color: #6366f1;
+}
+
+.period-badge {
+    background: linear-gradient(135deg, var(--bg-lighter), var(--bg-light));
+    color: var(--text-secondary);
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    border: 1px solid var(--border-color);
+}
+
+/* ==========================================
+   ÁREA DE TENDENCIA
+   ========================================== */
+.trend-area {
+    height: 100%;
+}
+
+.chart-wrapper-pro {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+    will-change: contents;
+    contain: layout style;
+}
+
+/* ==========================================
+   COLUMNA DERECHA - CATEGORÍAS + ACTIVIDAD
+   ========================================== */
+.dashboard-right-pro {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%;
+    min-height: 0;
+}
+
+/* Card de Categorías */
+.category-card {
+    flex: 0 0 auto;
+    height: 48%;
+}
+
+.doughnut-wrapper {
+    height: 160px;
+    margin-bottom: 12px;
+}
+
+.doughnut-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.center-number {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.center-text {
+    font-size: 10px;
+    color: #64748b;
+    margin-top: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.legend-grid-pro {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.legend-item-pro {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, var(--bg-lighter) 0%, var(--bg-light) 100%);
+    border-radius: 10px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-color);
+}
+
+.legend-item-pro:hover {
+    background: linear-gradient(135deg, var(--bg-light) 0%, var(--card-bg) 100%);
+    border-color: #6366f1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.08);
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.legend-text {
+    font-size: 10px;
+    color: var(--text-muted);
+    flex: 1;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.legend-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Card de Actividad */
+.activity-card {
+    flex: 1;
+    min-height: 0;
+}
+
+.activity-list-pro {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    padding-right: 4px;
+}
+
+.activity-list-pro::-webkit-scrollbar {
+    width: 4px;
+}
+
+.activity-list-pro::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.activity-list-pro::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 2px;
+}
+
+.activity-list-pro::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+}
+
+.activity-item-pro {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, var(--bg-lighter) 0%, var(--bg-light) 100%);
+    border-radius: 12px;
+    border-left: 2px solid transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.activity-item-pro:hover {
+    background: linear-gradient(135deg, var(--bg-light) 0%, var(--card-bg) 100%);
+    border-left-color: #6366f1;
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px -2px rgba(99, 102, 241, 0.12);
+}
+
+.activity-icon-wrapper {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--bg-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+}
+
+.activity-meta {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.activity-status {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.activity-status.normal {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.activity-status.low {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.empty-activity {
+    text-align: center;
+    padding: 40px 16px;
+    color: #94a3b8;
+}
+
+.empty-activity i {
+    font-size: 36px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.empty-activity p {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Tooltips Personalizados de Recharts */
+.custom-tooltip {
+    background: rgba(255, 255, 255, 0.98);
+    padding: 14px 18px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(12px);
+}
+
+.tooltip-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+}
+
+.tooltip-date {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-style: italic;
+    font-weight: 500;
+}
+
+.tooltip-value {
+    font-size: 12px;
+    font-weight: 600;
+    margin: 4px 0;
+    color: var(--text-primary);
+}
+
+.tooltip-percent {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+    .dashboard-grid-pro {
+        grid-template-columns: 60% 40%;
+    }
+}
+
+@media (max-width: 1200px) {
+    .dashboard-view-pro {
+        height: auto;
+        overflow-y: auto;
+    }
+    
+    .dashboard-grid-pro {
+        grid-template-columns: 1fr;
+        height: auto;
+        gap: 16px;
+    }
+    
+    .trend-area {
+        height: 400px;
+    }
+    
+    .category-card {
+        height: auto;
+    }
+    
+    .activity-card {
+        height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-grid-compact {
+        grid-template-columns: repeat(2, 1fr);
+        height: auto;
+        gap: 12px;
+    }
+    
+    .stat-card-mini {
+        padding: 14px 16px;
+    }
+    
+    .stat-value {
+        font-size: 20px;
+    }
+    
+    .stat-label {
+        font-size: 11px;
+    }
+    
+    .dashboard-card-pro {
+        padding: 16px;
+    }
+    
+    .card-header-pro h3 {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid-compact {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .dashboard-grid-pro {
+        gap: 12px;
+    }
+}

@@ -8,6 +8,13 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Cargar tema oscuro guardado
+    const savedDarkMode = localStorage.getItem('darkMode');
+    if (savedDarkMode === 'true') {
+      document.documentElement.classList.add('dark-mode');
+      document.body.classList.add('dark-mode');
+    }
+    
     // Verificar si hay sesión guardada
     const savedUser = localStorage.getItem('usuario');
     if (savedUser) {

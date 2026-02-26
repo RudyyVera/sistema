@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { obtenerProductos } from '../config/api';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import ProductTable from './ProductTable';
-import StatsCards from './StatsCards';
+import DashboardView from './DashboardView';
+import ProductsView from './ProductsView';
 import Reports from './Reports';
 import ScannerModal from './ScannerModal';
 import './Dashboard.css';
@@ -61,7 +61,10 @@ const Dashboard = ({ user, onLogout }) => {
         }
 
         // Filtro por estado
-        if (estadoFilter !== 'todos') {
+        if (estadoFilter === 'bajo-stock') {
+            // Filtrar productos con stock menor a 5
+            filtered = filtered.filter(p => parseInt(p.stock) < 5);
+        } else if (estadoFilter !== 'todos') {
             filtered = filtered.filter(p => p.estado === estadoFilter);
         }
 
@@ -123,21 +126,30 @@ const Dashboard = ({ user, onLogout }) => {
 
                 {currentView === 'dashboard' && (
                     <div className="dashboard-content">
-                        <StatsCards 
-                            productos={productos}
-                            estadoFilter={estadoFilter}
-                            onFilterChange={setEstadoFilter}
-                        />
-                        <ProductTable
+                        <DashboardView productos={productos} />
+                    </div>
+                )}
+
+                {currentView === 'productos' && (
+                    <div className="dashboard-content">
+                        <ProductsView
                             productos={filteredProductos}
+                            allProductos={productos}
                             onProductUpdated={handleProductUpdated}
                             onProductDeleted={handleProductDeleted}
                             onProductCreated={handleProductCreated}
+                            searchTerm={searchTerm}
+                            estadoFilter={estadoFilter}
+                            onFilterChange={setEstadoFilter}
                         />
                     </div>
                 )}
 
                 {currentView === 'reportes' && (
+                    <Reports productos={productos} />
+                )}
+
+                {currentView === 'exportar' && (
                     <Reports productos={productos} />
                 )}
             </div>

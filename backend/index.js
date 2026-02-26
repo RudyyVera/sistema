@@ -409,6 +409,69 @@ app.post('/api/productos/from-scan', (req, res) => {
 });
 
 // ==========================================
+// RUTA GET - OBTENER ESTADISTICAS DEL DASHBOARD
+// ==========================================
+app.get('/api/dashboard/stats', (req, res) => {
+    console.log('📊 Solicitud GET /api/dashboard/stats recibida');
+    
+    // Query para obtener estadísticas generales
+    const statsQuery = `
+        SELECT 
+            COUNT(*) as total_productos,
+            SUM(stock) as stock_total,
+            COUNT(CASE WHEN stock < 5 THEN 1 END) as bajo_stock,
+            COUNT(CASE WHEN stock < 5 THEN 1 END) as alertas
+        FROM productos
+        WHERE estado = 'Activo'
+    `;
+    
+    db.query(statsQuery, (err, statsResult) => {
+        if (err) {
+            console.error('❌ Error al obtener estadísticas:', err);
+            return res.status(500).json({ 
+                error: 'Error al obtener estadísticas',
+                detalles: err.message
+            });
+        }
+        
+        const stats = statsResult[0];
+        
+        // Generar datos de tendencia para los últimos 7 días
+        const tendenciaData = [];
+        const hoy = new Date();
+        
+        for (let i = 6; i >= 0; i--) {
+            const fecha = new Date(hoy);
+            fecha.setDate(fecha.getDate() - i);
+            
+            const dia = fecha.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', '');
+            const fechaStr = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+            
+            // Simulación de datos (puedes reemplazar con queries reales si tienes historial)
+            tendenciaData.push({
+                dia: dia.charAt(0).toUpperCase() + dia.slice(1),
+                fecha: fechaStr,
+                stock: Math.floor(stats.stock_total * (0.95 + Math.random() * 0.1)),
+                entrada: Math.floor(Math.random() * 50) + 10,
+                salida: Math.floor(Math.random() * 40) + 5
+            });
+        }
+        
+        console.log(`✅ Estadísticas calculadas: ${stats.total_productos} productos, ${stats.stock_total} stock total`);
+        
+        // Respuesta con estructura esperada por el frontend
+        res.json({
+            totalProductos: stats.total_productos,
+            stockTotal: stats.stock_total,
+            bajoStock: stats.bajo_stock,
+            alertas: stats.alertas,
+            tendencia: tendenciaData,
+            timestamp: new Date().toISOString()
+        });
+    });
+});
+
+// ==========================================
 // MANEJO DE ERRORES 404
 // ==========================================
 app.use((req, res) => {
@@ -446,13 +509,14 @@ const server = app.listen(PORT, () => {
     console.log(`📝 Base de datos: ${process.env.MYSQL_DATABASE || 'inventory_system'}`);
     console.log('═══════════════════════════════════════════════════════');
     console.log('📚 Rutas disponibles:');
-    console.log('   GET  /                  - Status del servidor');
-    console.log('   POST /api/login         - Autenticar usuario');
-    console.log('   GET  /api/socios        - Obtener todos los productos');
-    console.log('   GET  /api/socios/:id    - Obtener un producto por ID');
-    console.log('   POST /api/registrar     - Registrar nuevo producto');
-    console.log('   PUT  /api/socios/:id    - Actualizar un producto');
-    console.log('   DELETE /api/socios/:id  - Eliminar un producto');
+    console.log('   GET  /                      - Status del servidor');
+    console.log('   POST /api/login             - Autenticar usuario');
+    console.log('   GET  /api/socios            - Obtener todos los productos');
+    console.log('   GET  /api/socios/:id        - Obtener un producto por ID');
+    console.log('   POST /api/registrar         - Registrar nuevo producto');
+    console.log('   PUT  /api/socios/:id        - Actualizar un producto');
+    console.log('   DELETE /api/socios/:id      - Eliminar un producto');
+    console.log('   GET  /api/dashboard/stats   - Estadísticas del dashboard');
     console.log('═══════════════════════════════════════════════════════\n');
 });
 

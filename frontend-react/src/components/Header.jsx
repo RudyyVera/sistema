@@ -22,18 +22,23 @@ const Header = ({ user, onLogout, searchTerm, onSearchChange, onScanClick }) => 
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Aplicar cambios de tema al body
+    // Aplicar cambios de tema al body - Sincronizar al cargar
     useEffect(() => {
-        if (darkMode) {
-            document.body.classList.add('dark-mode');
-            // Agregar transición suave
-            document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
-        } else {
-            document.body.classList.remove('dark-mode');
-            document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
-        }
-        // Guardar en localStorage
-        localStorage.setItem('darkMode', JSON.stringify(darkMode));
+        const applyTheme = (isDark) => {
+            // Usar requestAnimationFrame para aplicar inmediatamente
+            requestAnimationFrame(() => {
+                if (isDark) {
+                    document.documentElement.classList.add('dark-mode');
+                    document.body.classList.add('dark-mode');
+                } else {
+                    document.documentElement.classList.remove('dark-mode');
+                    document.body.classList.remove('dark-mode');
+                }
+            });
+            localStorage.setItem('darkMode', JSON.stringify(isDark));
+        };
+        
+        applyTheme(darkMode);
     }, [darkMode]);
 
     const handleDarkModeToggle = () => {

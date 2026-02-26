@@ -84,8 +84,8 @@
 }
 
 .badge-success {
-    background: #d1fae5;
-    color: #065f46;
+    background: #e0e7ff;
+    color: #4338ca;
 }
 
 .badge-danger {
@@ -100,8 +100,8 @@
 }
 
 .badge-stock-ok {
-    background: #d1fae5;
-    color: #065f46;
+    background: #e0e7ff;
+    color: #4338ca;
 }
 
 .badge-stock-low {

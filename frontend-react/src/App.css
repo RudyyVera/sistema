@@ -5,89 +5,112 @@
     font-family: 'Inter', sans-serif;
 }
 
+/* Solo transicionar propiedades de color en elementos específicos */
+button, input, textarea, select, a, [role="button"] {
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+div, section, article, nav, header, footer {
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
 :root {
-    /* Colores base - Slate Gray Professional */
-    --primary: #10b981;
-    --primary-dark: #059669;
-    --primary-light: #d1fae5;
+    /* Colores base - Indigo para acentos primarios */
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --primary-light: #e0e7ff;
     --success: #10b981;
     --danger: #ef4444;
     --danger-hover: #dc2626;
     --warning: #f59e0b;
     
-    /* Texto */
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
+    /* Paleta Gris Plomo (Slate) - Sin azules */
+    --text-primary: #0f172a;       /* Slate-950 */
+    --text-secondary: #475569;     /* Slate-600 */
+    --text-muted: #94a3b8;         /* Slate-400 */
     
-    /* Fondos */
-    --bg-main: #f8fafc;
-    --bg-light: #ffffff;
-    --bg-lighter: #f1f5f9;
-    --bg-gradient-start: #f8fafc;
-    --bg-gradient-end: #f1f5f9;
+    /* Fondos - Blanco profesional */
+    --bg-main: #ffffff;            /* Blanco puro */
+    --bg-light: #ffffff;           /* Cards blanco */
+    --bg-lighter: #f8fafc;         /* Slate-50 alternativo */
+    --bg-gradient-start: #ffffff;
+    --bg-gradient-end: #f8fafc;
     
     /* Tarjetas y contenedores */
     --card-bg: #ffffff;
-    --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-    --card-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 6px 12px -3px rgba(0, 0, 0, 0.03);
+    --card-shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 12px 20px -5px rgba(0, 0, 0, 0.04);
     
-    /* Bordes */
-    --border-color: #e2e8f0;
-    --border-light: #f1f5f9;
+    /* Bordes - Gris sutil */
+    --border-color: #e2e8f0;       /* Slate-200 */
+    --border-light: #f1f5f9;       /* Slate-100 */
     
     /* Inputs */
     --input-bg: #ffffff;
-    --input-border: #cbd5e1;
-    --input-focus: #10b981;
+    --input-border: #cbd5e1;       /* Slate-300 */
+    --input-focus: #6366f1;        /* Indigo */
+    
+    /* Transiciones suaves */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     
     /* Otros */
     --radius: 8px;
-    --radius-lg: 12px;
+    --radius-lg: 14px;
+    --sidebar-width: 280px;
+    --sidebar-collapsed-width: 80px;
+    --active-sidebar-width: 280px;
 }
 
-/* Dark Mode Variables - Slate Professional Dark */
+/* Dark Mode Variables - Elegante Gris Plomo (Slate) */
 body.dark-mode {
-    --primary: #10b981;
-    --primary-dark: #059669;
-    --primary-light: #064e3b;
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --primary-light: #312e81;
     --success: #10b981;
     --danger: #ef4444;
     --danger-hover: #dc2626;
     --warning: #f59e0b;
     
-    /* Texto */
-    --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --text-muted: #64748b;
+    /* Texto - Slate Claro */
+    --text-primary: #f8fafc;      /* Slate-50 */
+    --text-secondary: #cbd5e1;     /* Slate-300 */
+    --text-muted: #94a3b8;         /* Slate-400 */
     
-    /* Fondos */
-    --bg-main: #0f172a;
-    --bg-light: #1e293b;
-    --bg-lighter: #334155;
-    --bg-gradient-start: #020617;
-    --bg-gradient-end: #0f172a;
+    /* Fondos - Gris Plomo Profundo */
+    --bg-main: #0f172a;            /* Slate-950 - Fondo principal */
+    --bg-light: #1e293b;           /* Slate-900 - Cards y Sidebar */
+    --bg-lighter: #334155;         /* Slate-800 - Elementos secundarios */
+    --bg-gradient-start: #020617;  /* Almost Black */
+    --bg-gradient-end: #0f172a;    /* Slate-950 */
     
     /* Tarjetas y contenedores */
     --card-bg: #1e293b;
-    --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
-    --card-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+    /* Sombra interna sutil (inner shadow) en lugar de sombra externa */
+    --card-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+    --card-shadow-lg: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 6px -1px rgba(0, 0, 0, 0.4);
     
-    /* Bordes */
-    --border-color: #334155;
-    --border-light: #1e293b;
+    /* Bordes - Gris muy sutil */
+    --border-color: #334155;       /* Slate-800 */
+    --border-light: #475569;       /* Slate-700 */
     
     /* Inputs */
-    --input-bg: #0f172a;
-    --input-border: #334155;
-    --input-focus: #10b981;
+    --input-bg: #0f172a;           /* Slate-950 */
+    --input-border: #334155;       /* Slate-800 */
+    --input-focus: #6366f1;        /* Indigo para consistencia */
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
     background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
     min-height: 100vh;
     color: var(--text-primary);
-    transition: all 0.3s ease;
+    transition: background 0.15s ease, color 0.15s ease;
+    background-attachment: fixed;
+    will-change: background, color;
 }
 
 .App {
