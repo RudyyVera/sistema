@@ -1,30 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { obtenerProductos } from '../config/api';
+import React, { useMemo, useState, useEffect } from 'react';
+import { obtenerProductos, obtenerDashboardStats, obtenerMovimientos } from '../config/api';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import DashboardView from './DashboardView';
 import ProductsView from './ProductsView';
+import MovementsView from './MovementsView';
 import Reports from './Reports';
-import ScannerModal from './ScannerModal';
 import './Dashboard.css';
 
 const Dashboard = ({ user, onLogout }) => {
     const [productos, setProductos] = useState([]);
-    const [filteredProductos, setFilteredProductos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentView, setCurrentView] = useState('dashboard');
     const [estadoFilter, setEstadoFilter] = useState('todos');
     const [alert, setAlert] = useState(null);
-    const [showScanner, setShowScanner] = useState(false);
+    const [dashboardData, setDashboardData] = useState(null);
+    const [movimientos, setMovimientos] = useState([]);
+    const alertasStockBajo = productos.filter((p) => parseInt(p.stock, 10) < 5);
 
     useEffect(() => {
         cargarProductos();
+        cargarDashboardData();
+        cargarMovimientos();
     }, []);
 
     useEffect(() => {
-        filtrarProductos();
-    }, [searchTerm, productos, estadoFilter]);
+        const polling = setInterval(() => {
+            if (currentView === 'dashboard') {
+                cargarProductos();
+                cargarDashboardData();
+                cargarMovimientos();
+            }
+        }, 15000);
+
+        return () => clearInterval(polling);
+    }, [currentView]);
 
     const cargarProductos = async () => {
         try {
@@ -48,56 +59,75 @@ const Dashboard = ({ user, onLogout }) => {
         }
     };
 
-    const filtrarProductos = () => {
+    const cargarDashboardData = async () => {
+        try {
+            const data = await obtenerDashboardStats();
+            setDashboardData(data);
+        } catch (error) {
+            console.error('Error al cargar dashboard stats:', error);
+        }
+    };
+
+    const cargarMovimientos = async () => {
+        try {
+            const data = await obtenerMovimientos();
+            setMovimientos(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error('Error al cargar movimientos:', error);
+            setMovimientos([]);
+        }
+    };
+
+    const filteredProductos = useMemo(() => {
+        const normalize = (value) => String(value || '').toLowerCase();
+        const query = normalize(searchTerm).trim();
+
         let filtered = productos;
 
-        // Filtro por búsqueda
-        if (searchTerm) {
-            filtered = filtered.filter(p =>
-                p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                p.dni.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                p.plan.toLowerCase().includes(searchTerm.toLowerCase())
-            );
+        if (query) {
+            filtered = filtered.filter((p) => (
+                normalize(p.nombre).includes(query) ||
+                normalize(p.dni).includes(query) ||
+                normalize(p.plan).includes(query)
+            ));
         }
 
-        // Filtro por estado
         if (estadoFilter === 'bajo-stock') {
-            // Filtrar productos con stock menor a 5
-            filtered = filtered.filter(p => parseInt(p.stock) < 5);
+            filtered = filtered.filter((p) => Number.parseInt(p.stock, 10) < 5);
         } else if (estadoFilter !== 'todos') {
-            filtered = filtered.filter(p => p.estado === estadoFilter);
+            filtered = filtered.filter((p) => p.estado === estadoFilter);
         }
 
-        setFilteredProductos(filtered);
-    };
+        return filtered;
+    }, [productos, searchTerm, estadoFilter]);
 
     const mostrarAlerta = (mensaje, tipo = 'success') => {
         setAlert({ mensaje, tipo });
         setTimeout(() => setAlert(null), 3000);
     };
 
-    const handleProductUpdated = () => {
-        cargarProductos();
+    const refrescarProductosYDashboard = async () => {
+        await Promise.all([cargarProductos(), cargarDashboardData()]);
+    };
+
+    const handleProductUpdated = async () => {
+        await refrescarProductosYDashboard();
         mostrarAlerta('Producto actualizado correctamente', 'success');
     };
 
-    const handleProductDeleted = () => {
-        cargarProductos();
+    const handleProductDeleted = async () => {
+        await refrescarProductosYDashboard();
         mostrarAlerta('Producto eliminado correctamente', 'success');
     };
 
-    const handleProductCreated = () => {
-        cargarProductos();
+    const handleProductCreated = async () => {
+        await refrescarProductosYDashboard();
         mostrarAlerta('Producto registrado correctamente', 'success');
     };
 
-    const handleScanDetected = (producto) => {
-        setShowScanner(false);
-        if (producto) {
-            // Recargar productos para mostrar el nuevo
-            cargarProductos();
-            mostrarAlerta(`✅ Producto guardado: ${producto.dni}`, 'success');
-        }
+    const handleMovementSaved = async () => {
+        await Promise.all([cargarProductos(), cargarDashboardData(), cargarMovimientos()]);
+        mostrarAlerta('Movimiento registrado correctamente', 'success');
     };
 
     if (loading) {
@@ -121,12 +151,16 @@ const Dashboard = ({ user, onLogout }) => {
                     onLogout={onLogout}
                     searchTerm={searchTerm}
                     onSearchChange={setSearchTerm}
-                    onScanClick={() => setShowScanner(true)}
+                    alertas={alertasStockBajo}
                 />
 
                 {currentView === 'dashboard' && (
                     <div className="dashboard-content">
-                        <DashboardView productos={productos} />
+                        <DashboardView
+                            productos={productos}
+                            dashboardData={dashboardData}
+                            movimientos={movimientos}
+                        />
                     </div>
                 )}
 
@@ -138,7 +172,6 @@ const Dashboard = ({ user, onLogout }) => {
                             onProductUpdated={handleProductUpdated}
                             onProductDeleted={handleProductDeleted}
                             onProductCreated={handleProductCreated}
-                            searchTerm={searchTerm}
                             estadoFilter={estadoFilter}
                             onFilterChange={setEstadoFilter}
                         />
@@ -149,8 +182,15 @@ const Dashboard = ({ user, onLogout }) => {
                     <Reports productos={productos} />
                 )}
 
-                {currentView === 'exportar' && (
-                    <Reports productos={productos} />
+                {currentView === 'movimientos' && (
+                    <div className="dashboard-content">
+                        <MovementsView
+                            productos={productos}
+                            movimientos={movimientos}
+                            user={user}
+                            onMovementSaved={handleMovementSaved}
+                        />
+                    </div>
                 )}
             </div>
 
@@ -158,22 +198,6 @@ const Dashboard = ({ user, onLogout }) => {
                 <div className={`alert alert-${alert.tipo}`}>
                     {alert.mensaje}
                 </div>
-            )}
-
-            {/* Botón Flotante (FAB) para escanear */}
-            <button 
-                className="fab-scan-button"
-                onClick={() => setShowScanner(true)}
-                title="Escanear producto"
-            >
-                <i className="fas fa-camera"></i>
-            </button>
-
-            {showScanner && (
-                <ScannerModal
-                    onClose={() => setShowScanner(false)}
-                    onDetected={handleScanDetected}
-                />
             )}
         </div>
     );

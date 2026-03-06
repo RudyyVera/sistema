@@ -9,17 +9,17 @@
     display: flex;
     flex-direction: column;
     margin-left: var(--active-sidebar-width, 280px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    will-change: margin-left;
-    transform: translateZ(0);
-    backface-visibility: hidden;
+    min-width: 0;
+    transition: margin-left 0.3s ease;
+    width: calc(100% - var(--active-sidebar-width, 280px));
 }
 
 .dashboard-content {
     flex: 1;
-    padding: 24px;
+    width: 100%;
+    max-width: none;
+    padding: 30px;
     overflow-y: auto;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (max-width: 768px) {
@@ -28,68 +28,8 @@
     }
 
     .dashboard-content {
-        padding: 16px;
-        padding-top: 80px; /* Espacio para el botón hamburguesa */
-    }
-}
-
-@media (max-width: 640px) {
-    .dashboard-container {
-        flex-direction: column;
+        padding: 14px;
+        padding-top: 78px;
     }
 
-    .dashboard-content {
-        padding: 12px;
-        padding-top: 80px;
-    }
-}
-
-/* Botón Flotante (FAB) para escanear */
-.fab-scan-button {
-    position: fixed;
-    bottom: 32px;
-    right: 32px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    color: white;
-    border: none;
-    font-size: 28px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 99;
-}
-
-.fab-scan-button:hover {
-    transform: scale(1.1) translateY(-4px);
-    box-shadow: 0 12px 32px rgba(99, 102, 241, 0.5);
-}
-
-.fab-scan-button:active {
-    transform: scale(0.95);
-}
-
-@media (max-width: 768px) {
-    .fab-scan-button {
-        bottom: 24px;
-        right: 24px;
-        width: 56px;
-        height: 56px;
-        font-size: 24px;
-    }
-}
-
-@media (max-width: 640px) {
-    .fab-scan-button {
-        bottom: 20px;
-        right: 20px;
-        width: 52px;
-        height: 52px;
-        font-size: 22px;
-    }
 }

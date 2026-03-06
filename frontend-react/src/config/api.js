@@ -48,4 +48,19 @@ export const eliminarProducto = async (id) => {
     return response.data;
 };
 
+export const obtenerDashboardStats = async () => {
+    const response = await api.get('/api/dashboard/stats');
+    return response.data;
+};
+
+export const obtenerMovimientos = async () => {
+    const response = await api.get('/api/movimientos');
+    return response.data;
+};
+
+export const registrarMovimiento = async (movimiento) => {
+    const response = await api.post('/api/movimientos', movimiento);
+    return response.data;
+};
+
 export default api;

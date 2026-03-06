@@ -2,9 +2,9 @@
 // IMPORTS
 // ==========================================
 const express = require('express');
-const mysql = require('mysql2');
 const cors = require('cors');
 require('dotenv').config();
+const db = require('./db');
 
 // ==========================================
 // INICIALIZACION
@@ -44,24 +44,11 @@ app.use((req, res, next) => {
     next();
 });
 
-// ==========================================
-// CONEXION A BASE DE DATOS
-// ==========================================
-const db = mysql.createPool({
-    host: process.env.MYSQL_HOST || 'localhost',
-    user: process.env.MYSQL_USER || 'root',
-    password: process.env.MYSQL_PASSWORD || '',
-    database: process.env.MYSQL_DATABASE || 'inventory_system',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
-
 // Validar conexión a la base de datos
 db.query('SELECT 1', (err) => {
     if (err) {
         console.error('❌ Error al conectar a MySQL:', err);
-        console.error('💡 Verifica que MySQL esté corriendo y la base de datos "inventory_system" exista');
+        console.error('💡 Verifica que MySQL esté corriendo y la base de datos configurada en .env exista');
         return;
     }
     console.log('✅ Conectado a la base de datos MySQL');
@@ -409,66 +396,277 @@ app.post('/api/productos/from-scan', (req, res) => {
 });
 
 // ==========================================
-// RUTA GET - OBTENER ESTADISTICAS DEL DASHBOARD
+// RUTAS MOVIMIENTOS DE INVENTARIO
 // ==========================================
-app.get('/api/dashboard/stats', (req, res) => {
-    console.log('📊 Solicitud GET /api/dashboard/stats recibida');
-    
-    // Query para obtener estadísticas generales
-    const statsQuery = `
-        SELECT 
-            COUNT(*) as total_productos,
-            SUM(stock) as stock_total,
-            COUNT(CASE WHEN stock < 5 THEN 1 END) as bajo_stock,
-            COUNT(CASE WHEN stock < 5 THEN 1 END) as alertas
-        FROM productos
-        WHERE estado = 'Activo'
+const formatearFechaMovimiento = (fecha) => {
+    const date = new Date(fecha);
+    return date.toLocaleString('es-PE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+const getMovimientosHistorial = async (limit = 50) => {
+    const sql = `
+        SELECT
+            m.id,
+            m.tipo,
+            m.cantidad,
+            m.created_at,
+            p.id AS productoId,
+            p.nombre AS productoNombre,
+            p.codigo AS productoCodigo,
+            COALESCE(u.username, 'Sistema') AS usuarioNombre
+        FROM movimientos_inventario m
+        INNER JOIN productos p ON p.id = m.producto_id
+        LEFT JOIN usuarios u ON u.id = m.usuario_id
+        ORDER BY m.created_at DESC, m.id DESC
+        LIMIT ?
     `;
-    
-    db.query(statsQuery, (err, statsResult) => {
-        if (err) {
-            console.error('❌ Error al obtener estadísticas:', err);
-            return res.status(500).json({ 
-                error: 'Error al obtener estadísticas',
-                detalles: err.message
-            });
+
+    const [rows] = await db.promise().query(sql, [Number(limit)]);
+    return rows.map((row) => ({
+        id: row.id,
+        tipo: row.tipo,
+        cantidad: Number(row.cantidad || 0),
+        productoId: Number(row.productoId),
+        productoNombre: row.productoNombre,
+        productoCodigo: row.productoCodigo,
+        usuarioNombre: row.usuarioNombre,
+        createdAt: row.created_at,
+        fechaTexto: formatearFechaMovimiento(row.created_at)
+    }));
+};
+
+app.get('/api/movimientos', async (req, res) => {
+    try {
+        const historial = await getMovimientosHistorial(100);
+        res.json(historial);
+    } catch (error) {
+        if (error.code === 'ER_NO_SUCH_TABLE') {
+            return res.json([]);
         }
-        
-        const stats = statsResult[0];
-        
-        // Generar datos de tendencia para los últimos 7 días
-        const tendenciaData = [];
-        const hoy = new Date();
-        
-        for (let i = 6; i >= 0; i--) {
-            const fecha = new Date(hoy);
-            fecha.setDate(fecha.getDate() - i);
-            
-            const dia = fecha.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', '');
-            const fechaStr = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
-            
-            // Simulación de datos (puedes reemplazar con queries reales si tienes historial)
-            tendenciaData.push({
-                dia: dia.charAt(0).toUpperCase() + dia.slice(1),
-                fecha: fechaStr,
-                stock: Math.floor(stats.stock_total * (0.95 + Math.random() * 0.1)),
-                entrada: Math.floor(Math.random() * 50) + 10,
-                salida: Math.floor(Math.random() * 40) + 5
-            });
+
+        console.error('❌ Error en /api/movimientos:', error);
+        res.status(500).json({ error: 'Error al obtener movimientos', detalles: error.message });
+    }
+});
+
+app.post('/api/movimientos', async (req, res) => {
+    const { productoId, tipo, cantidad, usuario } = req.body;
+    const tipoNormalizado = (tipo || '').toLowerCase();
+    const cantidadNum = parseInt(cantidad, 10);
+    const productoIdNum = parseInt(productoId, 10);
+
+    if (!productoIdNum || !['entrada', 'salida'].includes(tipoNormalizado) || !cantidadNum || cantidadNum <= 0) {
+        return res.status(400).json({ error: 'Datos de movimiento inválidos' });
+    }
+
+    const conn = await db.promise().getConnection();
+    try {
+        await conn.beginTransaction();
+
+        let usuarioId = usuario?.id ? parseInt(usuario.id, 10) : null;
+        if (!usuarioId && usuario?.username) {
+            const [users] = await conn.query('SELECT id FROM usuarios WHERE username = ? LIMIT 1', [usuario.username]);
+            if (users.length > 0) {
+                usuarioId = Number(users[0].id);
+            }
         }
-        
-        console.log(`✅ Estadísticas calculadas: ${stats.total_productos} productos, ${stats.stock_total} stock total`);
-        
-        // Respuesta con estructura esperada por el frontend
-        res.json({
-            totalProductos: stats.total_productos,
-            stockTotal: stats.stock_total,
-            bajoStock: stats.bajo_stock,
-            alertas: stats.alertas,
-            tendencia: tendenciaData,
-            timestamp: new Date().toISOString()
+
+        const [productoRows] = await conn.query(
+            'SELECT id, nombre, stock FROM productos WHERE id = ? FOR UPDATE',
+            [productoIdNum]
+        );
+
+        if (productoRows.length === 0) {
+            await conn.rollback();
+            return res.status(404).json({ error: 'Producto no encontrado' });
+        }
+
+        const producto = productoRows[0];
+        const stockActual = Number(producto.stock || 0);
+        const nuevoStock = tipoNormalizado === 'entrada'
+            ? stockActual + cantidadNum
+            : stockActual - cantidadNum;
+
+        if (nuevoStock < 0) {
+            await conn.rollback();
+            return res.status(400).json({ error: 'Stock insuficiente para registrar la salida' });
+        }
+
+        await conn.query('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, productoIdNum]);
+
+        const descripcion = `${tipoNormalizado} de ${cantidadNum} unidades`;
+        const [insertResult] = await conn.query(
+            'INSERT INTO movimientos_inventario (producto_id, tipo, cantidad, descripcion, usuario_id) VALUES (?, ?, ?, ?, ?)',
+            [productoIdNum, tipoNormalizado, cantidadNum, descripcion, usuarioId]
+        );
+
+        await conn.commit();
+
+        const historial = await getMovimientosHistorial(100);
+        res.status(201).json({
+            success: true,
+            mensaje: '✅ Movimiento registrado con éxito',
+            movimientoId: insertResult.insertId,
+            producto: {
+                id: productoIdNum,
+                nombre: producto.nombre,
+                stockAnterior: stockActual,
+                stockActual: nuevoStock
+            },
+            historial
+        });
+    } catch (error) {
+        await conn.rollback();
+        console.error('❌ Error en /api/movimientos POST:', error);
+        res.status(500).json({ error: 'Error al registrar movimiento', detalles: error.message });
+    } finally {
+        conn.release();
+    }
+});
+
+// ==========================================
+// RUTAS GET - DASHBOARD (RESUMEN, TENDENCIA, STATS)
+// ==========================================
+const getDashboardSummary = async () => {
+    const summaryQuery = `
+        SELECT
+            COUNT(*) AS totalProductos,
+            COALESCE(SUM(CASE WHEN estado = 'Activo' THEN 1 ELSE 0 END), 0) AS activos,
+            COALESCE(SUM(CASE WHEN estado = 'Inactivo' THEN 1 ELSE 0 END), 0) AS inactivos,
+            COALESCE(SUM(stock), 0) AS stockTotal,
+            COALESCE(SUM(CASE WHEN stock < 5 THEN 1 ELSE 0 END), 0) AS bajoStock,
+            COALESCE(SUM(precio * stock), 0) AS valorInventario
+        FROM productos
+    `;
+
+    const [rows] = await db.promise().query(summaryQuery);
+    const row = rows[0] || {};
+
+    return {
+        totalProductos: Number(row.totalProductos || 0),
+        activos: Number(row.activos || 0),
+        inactivos: Number(row.inactivos || 0),
+        stockTotal: Number(row.stockTotal || 0),
+        bajoStock: Number(row.bajoStock || 0),
+        valorInventario: Number(row.valorInventario || 0)
+    };
+};
+
+const getDashboardTrend = async (stockTotalActual) => {
+    const trendQuery = `
+        SELECT
+            DATE(created_at) AS fecha,
+            COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN cantidad ELSE 0 END), 0) AS entrada,
+            COALESCE(SUM(CASE WHEN tipo = 'salida' THEN cantidad ELSE 0 END), 0) AS salida,
+            COALESCE(SUM(CASE WHEN tipo = 'ajuste' THEN cantidad ELSE 0 END), 0) AS ajuste
+        FROM movimientos_inventario
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY fecha ASC
+    `;
+
+    let movementRows = [];
+    try {
+        const [rows] = await db.promise().query(trendQuery);
+        movementRows = rows;
+    } catch (error) {
+        if (error.code !== 'ER_NO_SUCH_TABLE') {
+            throw error;
+        }
+    }
+
+    const diasSemana = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+    const hoy = new Date();
+    const mapPorFecha = new Map();
+
+    movementRows.forEach((row) => {
+        const key = new Date(row.fecha).toISOString().slice(0, 10);
+        mapPorFecha.set(key, {
+            entrada: Number(row.entrada || 0),
+            salida: Number(row.salida || 0),
+            ajuste: Number(row.ajuste || 0)
         });
     });
+
+    const tendenciaBase = [];
+    for (let i = 6; i >= 0; i--) {
+        const fecha = new Date(hoy);
+        fecha.setDate(hoy.getDate() - i);
+        const key = fecha.toISOString().slice(0, 10);
+        const movimientos = mapPorFecha.get(key) || { entrada: 0, salida: 0, ajuste: 0 };
+
+        tendenciaBase.push({
+            fechaISO: key,
+            dia: diasSemana[fecha.getDay()],
+            fecha: fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }),
+            entrada: movimientos.entrada,
+            salida: movimientos.salida,
+            ajuste: movimientos.ajuste,
+            delta: movimientos.entrada - movimientos.salida + movimientos.ajuste
+        });
+    }
+
+    const deltaTotal = tendenciaBase.reduce((acc, item) => acc + item.delta, 0);
+    let stockAcumulado = Number(stockTotalActual || 0) - deltaTotal;
+
+    return tendenciaBase.map((item) => {
+        stockAcumulado += item.delta;
+        return {
+            dia: item.dia,
+            fecha: item.fecha,
+            stock: stockAcumulado,
+            entrada: item.entrada,
+            salida: item.salida
+        };
+    });
+};
+
+app.get('/api/dashboard/summary', async (req, res) => {
+    try {
+        const summary = await getDashboardSummary();
+        res.json(summary);
+    } catch (error) {
+        console.error('❌ Error en /api/dashboard/summary:', error);
+        res.status(500).json({ error: 'Error al obtener el resumen del dashboard', detalles: error.message });
+    }
+});
+
+app.get('/api/dashboard/trend', async (req, res) => {
+    try {
+        const summary = await getDashboardSummary();
+        const tendencia = await getDashboardTrend(summary.stockTotal);
+        res.json(tendencia);
+    } catch (error) {
+        console.error('❌ Error en /api/dashboard/trend:', error);
+        res.status(500).json({ error: 'Error al obtener la tendencia del dashboard', detalles: error.message });
+    }
+});
+
+app.get('/api/dashboard/stats', async (req, res) => {
+    console.log('📊 Solicitud GET /api/dashboard/stats recibida');
+
+    try {
+        const summary = await getDashboardSummary();
+        const tendencia = await getDashboardTrend(summary.stockTotal);
+
+        res.json({
+            ...summary,
+            tendencia,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('❌ Error al obtener estadísticas del dashboard:', error);
+        res.status(500).json({
+            error: 'Error al obtener estadísticas del dashboard',
+            detalles: error.message
+        });
+    }
 });
 
 // ==========================================
@@ -506,7 +704,7 @@ const server = app.listen(PORT, () => {
     console.log('═══════════════════════════════════════════════════════');
     console.log(`🌐 URL: http://localhost:${PORT}`);
     console.log(`✅ CORS habilitado para: http://localhost:3000`);
-    console.log(`📝 Base de datos: ${process.env.MYSQL_DATABASE || 'inventory_system'}`);
+    console.log(`📝 Base de datos: ${process.env.MYSQL_DATABASE || 'inventory_system_react'}`);
     console.log('═══════════════════════════════════════════════════════');
     console.log('📚 Rutas disponibles:');
     console.log('   GET  /                      - Status del servidor');
@@ -516,6 +714,10 @@ const server = app.listen(PORT, () => {
     console.log('   POST /api/registrar         - Registrar nuevo producto');
     console.log('   PUT  /api/socios/:id        - Actualizar un producto');
     console.log('   DELETE /api/socios/:id      - Eliminar un producto');
+    console.log('   GET  /api/movimientos       - Historial de movimientos');
+    console.log('   POST /api/movimientos       - Registrar movimiento y actualizar stock');
+    console.log('   GET  /api/dashboard/summary - Resumen del dashboard');
+    console.log('   GET  /api/dashboard/trend   - Tendencia de inventario');
     console.log('   GET  /api/dashboard/stats   - Estadísticas del dashboard');
     console.log('═══════════════════════════════════════════════════════\n');
 });

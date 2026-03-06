@@ -36,10 +36,10 @@ const Sidebar = ({ currentView, onChangeView }) => {
     }, [isCollapsed]);
 
     const menuItems = [
-        { id: 'dashboard', icon: 'fa-chart-line', label: 'Dashboard' },
-        { id: 'productos', icon: 'fa-box', label: 'Productos' },
-        { id: 'reportes', icon: 'fa-file-alt', label: 'Reportes' },
-        { id: 'exportar', icon: 'fa-download', label: 'Exportar' },
+        { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
+        { id: 'productos', icon: 'fa-boxes', label: 'Productos' },
+        { id: 'movimientos', icon: 'fa-exchange-alt', label: 'Movimientos' },
+        { id: 'reportes', icon: 'fa-chart-bar', label: 'Reportes' },
     ];
 
     const handleMenuClick = (itemId) => {
@@ -128,7 +128,7 @@ const Sidebar = ({ currentView, onChangeView }) => {
                 <div className="sidebar-footer">
                     {!isCollapsed && (
                         <>
-                            <p>Stocklin v1.0</p>
+                            <p>Stocklin</p>
                             <p>© 2026</p>
                         </>
                     )}

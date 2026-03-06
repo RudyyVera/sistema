@@ -5,7 +5,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 20px;
+    gap: 30px;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -14,10 +14,11 @@
 
 .header-search {
     flex: 1;
-    max-width: 640px;
+    max-width: none;
     display: flex;
     align-items: center;
     gap: 12px;
+    margin-right: 44px;
 }
 
 .search-box {
@@ -51,9 +52,111 @@
 
 .header-user {
     display: flex;
+    justify-content: flex-end;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
     position: relative;
+    flex-shrink: 0;
+}
+
+.notification-container {
+    position: static;
+}
+
+.header-notification {
+    border: 1px solid var(--border-color);
+    background: var(--bg-light);
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-light);
+}
+
+.notifications-dropdown {
+    position: absolute;
+    right: 20px;
+    top: 60px;
+    z-index: 1000;
+    width: 300px;
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.12);
+    padding: 12px;
+}
+
+.notifications-title {
+    margin: 0 0 10px 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.notifications-empty {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 8px;
+    background: var(--bg-lighter);
+}
+
+.notification-item i {
+    margin-top: 2px;
+    color: #f59e0b;
+}
+
+.notification-item p {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.notification-item span {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.header-admin-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .user-info {
@@ -254,10 +357,15 @@ input:checked + .slider:before {
 
     .header-search {
         max-width: 100%;
+        margin-right: 0;
     }
 
     .user-info {
         display: none;
+    }
+
+    .header-user {
+        gap: 12px;
     }
 
     .user-dropdown-menu {
