@@ -1,20 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Header.css';
 
-const Header = ({ user, onLogout, searchTerm, onSearchChange, onScanClick }) => {
+const Header = ({ user, onLogout, searchTerm, onSearchChange, alertas = [] }) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
     const [darkMode, setDarkMode] = useState(() => {
-        // Cargar desde localStorage
         const saved = localStorage.getItem('darkMode');
         return saved ? JSON.parse(saved) : false;
     });
     const menuRef = useRef(null);
+    const notificationsRef = useRef(null);
 
-    // Cerrar dropdown al hacer clic fuera
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
                 setShowUserMenu(false);
+            }
+
+            if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+                setShowNotifications(false);
             }
         };
 
@@ -22,10 +26,8 @@ const Header = ({ user, onLogout, searchTerm, onSearchChange, onScanClick }) => 
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Aplicar cambios de tema al body - Sincronizar al cargar
     useEffect(() => {
         const applyTheme = (isDark) => {
-            // Usar requestAnimationFrame para aplicar inmediatamente
             requestAnimationFrame(() => {
                 if (isDark) {
                     document.documentElement.classList.add('dark-mode');
@@ -37,12 +39,12 @@ const Header = ({ user, onLogout, searchTerm, onSearchChange, onScanClick }) => 
             });
             localStorage.setItem('darkMode', JSON.stringify(isDark));
         };
-        
+
         applyTheme(darkMode);
     }, [darkMode]);
 
     const handleDarkModeToggle = () => {
-        setDarkMode(!darkMode);
+        setDarkMode((prevDarkMode) => !prevDarkMode);
     };
 
     const handleLogout = () => {
@@ -66,59 +68,87 @@ const Header = ({ user, onLogout, searchTerm, onSearchChange, onScanClick }) => 
             </div>
 
             <div className="header-user">
-                <div className="user-info">
-                    <span className="user-name">{user?.nombre || user?.username}</span>
-                    <span className="user-role">{user?.rol || 'Administrador'}</span>
-                </div>
-
-                {/* Avatar con dropdown */}
-                <div className="user-menu-container" ref={menuRef}>
+                <div className="notification-container" ref={notificationsRef}>
                     <button
-                        className="user-avatar-button"
-                        onClick={() => setShowUserMenu(!showUserMenu)}
-                        title="Menú de usuario"
+                        className="header-notification"
+                        type="button"
+                        aria-label="Notificaciones"
+                        onClick={() => setShowNotifications((prev) => !prev)}
                     >
-                        <i className="fas fa-user"></i>
+                        <i className="fas fa-bell"></i>
+                        <span className="notification-badge">{alertas.length > 0 ? alertas.length : 0}</span>
                     </button>
 
-                    {/* Dropdown Menu */}
-                    {showUserMenu && (
-                        <div className="user-dropdown-menu">
-                            {/* Configuración */}
-                            <button className="dropdown-item">
-                                <i className="fas fa-cog"></i>
-                                <span>Configuración</span>
-                            </button>
-
-                            {/* Separador */}
-                            <div className="dropdown-divider"></div>
-
-                            {/* Modo Oscuro */}
-                            <div className="dropdown-item-toggle">
-                                <div className="toggle-label">
-                                    <i className="fas fa-moon"></i>
-                                    <span>Modo Oscuro</span>
+                    {showNotifications && (
+                        <div className="notifications-dropdown">
+                            <p className="notifications-title">Notificaciones</p>
+                            {alertas.length === 0 ? (
+                                <p className="notifications-empty">No hay notificaciones nuevas</p>
+                            ) : (
+                                <div className="notifications-list">
+                                    {alertas.slice(0, 5).map((alerta) => (
+                                        <div key={alerta.id} className="notification-item">
+                                            <i className="fas fa-triangle-exclamation"></i>
+                                            <div>
+                                                <p>{alerta.nombre}</p>
+                                                <span>Stock actual: {alerta.stock}</span>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <label className="toggle-switch">
-                                    <input
-                                        type="checkbox"
-                                        checked={darkMode}
-                                        onChange={handleDarkModeToggle}
-                                    />
-                                    <span className="slider"></span>
-                                </label>
-                            </div>
-
-                            {/* Separador */}
-                            <div className="dropdown-divider"></div>
-
-                            {/* Cerrar Sesión */}
-                            <button className="dropdown-item dropdown-item-danger" onClick={handleLogout}>
-                                <i className="fas fa-sign-out-alt"></i>
-                                <span>Cerrar Sesión</span>
-                            </button>
+                            )}
                         </div>
                     )}
+                </div>
+
+                <div className="header-admin-block">
+                    <div className="user-info">
+                        <span className="user-name">{user?.nombre || user?.username || 'Administrador'}</span>
+                        <span className="user-role">{user?.rol || 'Admin'}</span>
+                    </div>
+
+                    <div className="user-menu-container" ref={menuRef}>
+                        <button
+                            className="user-avatar-button"
+                            onClick={() => setShowUserMenu((prev) => !prev)}
+                            title="Menu de usuario"
+                        >
+                            <i className="fas fa-user"></i>
+                        </button>
+
+                        {showUserMenu && (
+                            <div className="user-dropdown-menu">
+                                <button className="dropdown-item">
+                                    <i className="fas fa-cog"></i>
+                                    <span>Configuracion</span>
+                                </button>
+
+                                <div className="dropdown-divider"></div>
+
+                                <div className="dropdown-item-toggle">
+                                    <div className="toggle-label">
+                                        <i className="fas fa-moon"></i>
+                                        <span>Modo Oscuro</span>
+                                    </div>
+                                    <label className="toggle-switch">
+                                        <input
+                                            type="checkbox"
+                                            checked={darkMode}
+                                            onChange={handleDarkModeToggle}
+                                        />
+                                        <span className="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div className="dropdown-divider"></div>
+
+                                <button className="dropdown-item dropdown-item-danger" onClick={handleLogout}>
+                                    <i className="fas fa-sign-out-alt"></i>
+                                    <span>Cerrar Sesion</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </header>

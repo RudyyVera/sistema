@@ -1,5 +1,8 @@
 # Dependencies
 node_modules/
+
+# Prevent accidental nested project duplication
+Desktop/dashboard/sistema-inventario/
 */node_modules/
 package-lock.json
 */package-lock.json

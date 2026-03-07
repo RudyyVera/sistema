@@ -175,8 +175,8 @@
 }
 
 .sidebar-menu-item:hover {
-    background: rgba(99, 102, 241, 0.08);
-    color: #6366f1;
+    background: #f5f3ff;
+    color: #7e22ce;
 }
 
 .sidebar-menu-item i {
@@ -211,13 +211,13 @@
 
 /* Item Activo */
 .sidebar-menu-item.active {
-    background: rgba(99, 102, 241, 0.1);
-    color: #6366f1;
+    background: #f3e8ff;
+    color: #7e22ce;
     font-weight: 600;
 }
 
 .sidebar-menu-item.active i {
-    color: #6366f1;
+    color: #7e22ce;
 }
 
 /* Indicador Visual del Item Activo */
@@ -228,7 +228,7 @@
     transform: translateY(-50%);
     width: 4px;
     height: 60%;
-    background: linear-gradient(180deg, #6366f1, #4f46e5);
+    background: linear-gradient(180deg, #a855f7, #7e22ce);
     border-radius: 0 4px 4px 0;
     box-shadow: 2px 0 6px rgba(99, 102, 241, 0.4);
 }

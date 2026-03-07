@@ -1,12 +1,10 @@
-import React, { useState, useEffect, memo, useMemo } from 'react';
-import StatsCards from './StatsCards';
-import { 
-    PieChart, 
-    Pie, 
-    Cell, 
-    ResponsiveContainer, 
-    Tooltip, 
-    Legend,
+import React, { useMemo } from 'react';
+import {
+    PieChart,
+    Pie,
+    Cell,
+    ResponsiveContainer,
+    Tooltip,
     AreaChart,
     Area,
     XAxis,
@@ -15,86 +13,78 @@ import {
 } from 'recharts';
 import './DashboardView.css';
 
-const DashboardView = ({ productos }) => {
-    // Estados para datos dinámicos de la API
-    const [dashboardStats, setDashboardStats] = useState(null);
-    const [tendenciaData, setTendenciaData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    
-    // Productos con stock bajo (menos de 5)
-    const stockBajo = productos.filter(p => parseInt(p.stock) < 5);
-    
-    // Productos por estado
-    const activos = productos.filter(p => p.estado === 'Activo').length;
-    const inactivos = productos.filter(p => p.estado === 'Inactivo').length;
+const DashboardView = ({ productos, dashboardData, movimientos = [] }) => {
+    const stockBajo = productos.filter((p) => parseInt(p.stock, 10) < 5);
+    const activos = productos.filter((p) => p.estado === 'Activo').length;
+    const inactivos = productos.filter((p) => p.estado === 'Inactivo').length;
 
-    // Top 5 productos con menos stock
-    const topStockBajo = [...productos]
-        .sort((a, b) => parseInt(a.stock) - parseInt(b.stock))
-        .slice(0, 5);
+    const tendenciaData = useMemo(() => {
+        if (dashboardData?.tendencia && dashboardData.tendencia.length > 0) {
+            return dashboardData.tendencia;
+        }
 
-    // ==========================================
-    // CARGAR DATOS DESDE API
-    // ==========================================
-    useEffect(() => {
-        const cargarDashboardStats = async () => {
-            try {
-                setLoading(true);
-                const response = await fetch('http://localhost:5000/api/dashboard/stats');
-                
-                if (!response.ok) {
-                    throw new Error('Error al cargar estadísticas');
-                }
-                
-                const data = await response.json();
-                setDashboardStats(data);
-                setTendenciaData(data.tendencia || generarTendenciaFallback());
-            } catch (error) {
-                console.error('Error al cargar stats del dashboard:', error);
-                // Fallback a datos simulados
-                setTendenciaData(generarTendenciaFallback());
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        cargarDashboardStats();
-    }, [productos]);
-
-    // Función fallback para generar datos simulados
-    const generarTendenciaFallback = () => {
-        const diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+        const diasSemana = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
         const hoy = new Date();
-        
+        const stockTotal = productos.reduce((acc, producto) => acc + (parseInt(producto.stock, 10) || 0), 0);
+
         return diasSemana.map((dia, index) => {
             const fecha = new Date(hoy);
             fecha.setDate(fecha.getDate() - (6 - index));
-            
+
             return {
                 dia,
                 fecha: fecha.toISOString().split('T')[0],
-                stock: 245 + (index * 5),
-                entrada: Math.floor(Math.random() * 15) + 10,
-                salida: Math.floor(Math.random() * 10) + 5
+                stock: stockTotal
             };
         });
-    };
+    }, [dashboardData, productos]);
 
-    // ==========================================
-    // DATOS PARA GRÁFICOS (Memoizados)
-    // ==========================================
-    
-    // Datos para el Pie Chart (Doughnut)
-    const estadoData = useMemo(() => [
-        { name: 'Activos', value: activos, color: '#6366f1' },
-        { name: 'Inactivos', value: inactivos, color: '#ef4444' }
-    ], [activos, inactivos]);
+    const valorInventarioLocal = useMemo(() => {
+        return productos.reduce((total, producto) => {
+            const precio = parseFloat(producto.fecha_pago) || 0;
+            const stock = parseInt(producto.stock, 10) || 0;
+            return total + (precio * stock);
+        }, 0);
+    }, [productos]);
 
-    // ==========================================
-    // TOOLTIPS PERSONALIZADOS (Memoizados)
-    // ==========================================
-    
-    const CustomPieTooltip = useMemo(() => memo(({ active, payload }) => {
+    const totalProductosCard = dashboardData?.totalProductos ?? productos.length;
+    const bajoStockCard = dashboardData?.bajoStock ?? stockBajo.length;
+    const valorInventario = dashboardData?.valorInventario ?? valorInventarioLocal;
+
+    const valorInventarioTexto = useMemo(() => {
+        return new Intl.NumberFormat('es-PE', {
+            style: 'currency',
+            currency: 'PEN',
+            maximumFractionDigits: 2
+        }).format(valorInventario || 0);
+    }, [valorInventario]);
+
+    const estadoData = useMemo(
+        () => [
+            { name: 'Activos', value: activos, color: '#7c3aed' },
+            { name: 'Inactivos', value: inactivos, color: '#ef4444' }
+        ],
+        [activos, inactivos]
+    );
+
+    const actividadReciente = useMemo(() => {
+        if (Array.isArray(movimientos) && movimientos.length > 0) {
+            return movimientos.slice(0, 5);
+        }
+
+        return [...productos]
+            .sort((a, b) => b.id - a.id)
+            .slice(0, 5)
+            .map((producto) => ({
+                id: `fallback-${producto.id}`,
+                tipo: 'salida',
+                productoNombre: producto.nombre,
+                cantidad: Math.max(1, parseInt(producto.stock, 10) || 1),
+                fechaTexto: 'sin fecha'
+            }));
+    }, [movimientos, productos]);
+
+    const CustomPieTooltip = ({ active, payload }) => {
         if (active && payload && payload.length) {
             return (
                 <div className="custom-tooltip">
@@ -102,45 +92,31 @@ const DashboardView = ({ productos }) => {
                     <p className="tooltip-value" style={{ color: payload[0].payload.color }}>
                         {payload[0].value} productos
                     </p>
-                    <p className="tooltip-percent">
-                        {((payload[0].value / productos.length) * 100).toFixed(1)}%
-                    </p>
                 </div>
             );
         }
         return null;
-    }), [productos.length]);
+    };
 
-    const CustomAreaTooltip = useMemo(() => memo(({ active, payload, label }) => {
+    const CustomAreaTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
-            // Buscar la fecha correspondiente en tendenciaData
-            const dataPoint = tendenciaData.find(d => d.dia === label);
+            const dataPoint = tendenciaData.find((d) => d.dia === label);
             const fecha = dataPoint?.fecha || label;
-            
+
             return (
                 <div className="custom-tooltip">
                     <p className="tooltip-label">{label}</p>
                     <p className="tooltip-date">{fecha}</p>
-                    <p className="tooltip-value" style={{ color: '#6366f1' }}>
-                        📦 Stock: {payload[0]?.value || 0}
+                    <p className="tooltip-value" style={{ color: '#7c3aed' }}>
+                        Stock: {payload[0]?.value || 0}
                     </p>
-                    {payload[1] && (
-                        <p className="tooltip-value" style={{ color: '#10b981' }}>
-                            ⬆️ Entradas: {payload[1].value}
-                        </p>
-                    )}
-                    {payload[2] && (
-                        <p className="tooltip-value" style={{ color: '#ef4444' }}>
-                            ⬇️ Salidas: {payload[2].value}
-                        </p>
-                    )}
                 </div>
             );
         }
         return null;
-    }), [tendenciaData]);
+    };
 
-    if (loading && tendenciaData.length === 0) {
+    if (productos.length === 0 && tendenciaData.length === 0) {
         return (
             <div className="dashboard-view-pro">
                 <div className="loading-state">
@@ -151,107 +127,143 @@ const DashboardView = ({ productos }) => {
         );
     }
 
-    // Actividad reciente (últimos 5 productos)
-    const actividadReciente = [...productos]
-        .sort((a, b) => b.id - a.id)
-        .slice(0, 5);
-
     return (
         <div className="dashboard-view-pro">
-            {/* Grid de Tarjetas Compactas - 1 Fila */}
-            <div className="stats-grid-compact">
-                <div className="stat-card-mini">
-                    <div className="stat-icon primary">
-                        <i className="fas fa-boxes"></i>
-                    </div>
-                    <div className="stat-info">
-                        <div className="stat-value">{productos.length}</div>
-                        <div className="stat-label">Total Productos</div>
-                    </div>
-                </div>
-                <div className="stat-card-mini">
-                    <div className="stat-icon success">
-                        <i className="fas fa-check-circle"></i>
-                    </div>
-                    <div className="stat-info">
-                        <div className="stat-value">{activos}</div>
-                        <div className="stat-label">Activos</div>
-                    </div>
-                </div>
-                <div className="stat-card-mini">
-                    <div className="stat-icon danger">
-                        <i className="fas fa-times-circle"></i>
-                    </div>
-                    <div className="stat-info">
-                        <div className="stat-value">{inactivos}</div>
-                        <div className="stat-label">Inactivos</div>
-                    </div>
-                </div>
-                <div className="stat-card-mini">
-                    <div className="stat-icon warning">
-                        <i className="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div className="stat-info">
-                        <div className="stat-value">{stockBajo.length}</div>
-                        <div className="stat-label">Stock Bajo</div>
-                    </div>
-                </div>
-            </div>
+            <div className="dashboard-shell-grid dashboard-layout-grid">
+                <div className="stats-grid stats-grid-compact">
+                        <div className="stat-card-mini accent-purple">
+                            <div className="stat-icon primary">
+                                <i className="fas fa-boxes"></i>
+                            </div>
+                            <div className="stat-info">
+                                <div className="stat-value">{totalProductosCard}</div>
+                                <div className="stat-label">TOTAL PRODUCTOS</div>
+                            </div>
+                        </div>
 
-            {/* Grid Principal: 65% Izquierda + 35% Derecha */}
-            <div className="dashboard-grid-pro">
-                {/* Columna Izquierda (65%) - Tendencia */}
-                <div className="dashboard-card-pro trend-area">
-                    <div className="card-header-pro">
-                        <h3>
-                            <i className="fas fa-chart-area"></i>
-                            Tendencia de Inventario
-                        </h3>
-                        <span className="period-badge">Últimos 7 Días</span>
-                    </div>
-                    <div className="chart-wrapper-pro">
-                        <ResponsiveContainer width="100%" height="100%" debounce={0}>
-                            <AreaChart data={tendenciaData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                <defs>
-                                    <linearGradient id="colorStock" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#6366f1" stopOpacity={0.35}/>
-                                        <stop offset="50%" stopColor="#6366f1" stopOpacity={0.15}/>
-                                        <stop offset="100%" stopColor="#6366f1" stopOpacity={0.01}/>
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" opacity={0.8} />
-                                <XAxis 
-                                    dataKey="dia" 
-                                    stroke="#94a3b8"
-                                    style={{ fontSize: '11px', fontWeight: '500' }}
-                                    tickLine={false}
-                                    axisLine={false}
-                                />
-                                <YAxis 
-                                    stroke="#94a3b8"
-                                    style={{ fontSize: '11px', fontWeight: '500' }}
-                                    tickLine={false}
-                                    axisLine={false}
-                                />
-                                <Tooltip content={<CustomAreaTooltip />} />
-                                <Area 
-                                    type="monotone" 
-                                    dataKey="stock" 
-                                    stroke="#6366f1" 
-                                    strokeWidth={2}
-                                    fillOpacity={1} 
-                                    fill="url(#colorStock)"
-                                    name="Stock Total"
-                                    isAnimationActive={false}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
+                        <div className="stat-card-mini accent-green">
+                            <div className="stat-icon success">
+                                <i className="fas fa-check-circle"></i>
+                            </div>
+                            <div className="stat-info">
+                                <div className="stat-value">{activos}</div>
+                                <div className="stat-label">ACTIVOS</div>
+                            </div>
+                        </div>
+
+                        <div className="stat-card-mini accent-blue">
+                            <div className="stat-icon info">
+                                <i className="fas fa-dollar-sign"></i>
+                            </div>
+                            <div className="stat-info">
+                                <div className="stat-value stat-value-money" title={valorInventarioTexto}>{valorInventarioTexto}</div>
+                                <div className="stat-label">VALOR INVENTARIO</div>
+                            </div>
+                        </div>
+
+                        <div className="stat-card-mini accent-yellow">
+                            <div className="stat-icon warning">
+                                <i className="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div className="stat-info">
+                                <div className="stat-value">{bajoStockCard}</div>
+                                <div className="stat-label">STOCK BAJO</div>
+                            </div>
+                        </div>
+
                 </div>
 
-                {/* Columna Derecha (35%) - Categorías + Actividad */}
-                <div className="dashboard-right-pro">
-                    {/* Gráfico Circular - Categorías */}
+                <div className="main-content dashboard-left-column">
+                    <div className="dashboard-card-pro trend-area">
+                        <div className="card-header-pro">
+                            <h3>
+                                <i className="fas fa-chart-area"></i>
+                                Tendencia de Inventario
+                            </h3>
+                            <span className="period-badge">ULTIMOS 7 DIAS</span>
+                        </div>
+
+                        <div className="chart-wrapper-pro">
+                            <ResponsiveContainer width="100%" height="100%" debounce={0}>
+                                <AreaChart data={tendenciaData} margin={{ top: 8, right: 20, left: -10, bottom: 8 }}>
+                                    <defs>
+                                        <linearGradient id="colorStock" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.45} />
+                                            <stop offset="70%" stopColor="#8b5cf6" stopOpacity={0.12} />
+                                            <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.03} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                    <XAxis
+                                        dataKey="dia"
+                                        stroke="#94a3b8"
+                                        style={{ fontSize: '11px', fontWeight: '600' }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                    />
+                                    <YAxis
+                                        stroke="#94a3b8"
+                                        style={{ fontSize: '11px', fontWeight: '600' }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                    />
+                                    <Tooltip content={<CustomAreaTooltip />} />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="stock"
+                                        stroke="#7c3aed"
+                                        strokeWidth={2.2}
+                                        fillOpacity={1}
+                                        fill="url(#colorStock)"
+                                        name="Stock Total"
+                                        isAnimationActive={false}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    <div className="dashboard-card-pro activity-card-wide">
+                        <div className="card-header-pro">
+                            <h3>
+                                <i className="fas fa-history"></i>
+                                Actividad Reciente
+                            </h3>
+                            <span className="activity-count">{actividadReciente.length} eventos</span>
+                        </div>
+
+                        <div className="activity-timeline">
+                            {actividadReciente.length === 0 ? (
+                                <div className="empty-activity">
+                                    <i className="fas fa-inbox"></i>
+                                    <p>Sin actividad</p>
+                                </div>
+                            ) : (
+                                actividadReciente.map((movimiento, idx) => (
+                                    <div key={movimiento.id} className="timeline-item">
+                                        <div className="timeline-icon">
+                                            <i className={`fas ${movimiento.tipo === 'entrada' ? 'fa-arrow-down' : 'fa-arrow-up'}`}></i>
+                                        </div>
+                                        <div className="timeline-content">
+                                            <p className="timeline-title">Movimiento: {movimiento.tipo}</p>
+                                            <p className="timeline-name">{movimiento.productoNombre}</p>
+                                            <p className="timeline-meta">Cantidad: {movimiento.cantidad}</p>
+                                        </div>
+                                        <div className="timeline-time">{movimiento.fechaTexto || `hace ${idx + 1} h`}</div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="activity-footer">
+                            <button type="button" className="history-button">
+                                Ver todo el historial
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <aside className="dashboard-right-column sidebar-right">
                     <div className="dashboard-card-pro category-card">
                         <div className="card-header-pro">
                             <h3>
@@ -259,34 +271,38 @@ const DashboardView = ({ productos }) => {
                                 Estado Productos
                             </h3>
                         </div>
-                        <div className="chart-wrapper-pro doughnut-wrapper">
-                            <ResponsiveContainer width="100%" height="100%" debounce={0}>
-                                <PieChart>
-                                    <Pie
-                                        data={estadoData}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={40}
-                                        outerRadius={65}
-                                        paddingAngle={4}
-                                        dataKey="value"
-                                        isAnimationActive={false}
-                                    >
-                                        {estadoData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip content={<CustomPieTooltip />} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                            <div className="doughnut-center-text">
-                                <div className="center-number">{productos.length}</div>
-                                <div className="center-text">Total</div>
+
+                        <div className="doughnut-layer-grid">
+                            <div className="doughnut-chart-layer">
+                                <ResponsiveContainer width="100%" height="100%" debounce={0}>
+                                    <PieChart>
+                                        <Pie
+                                            data={estadoData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={44}
+                                            outerRadius={74}
+                                            paddingAngle={3}
+                                            dataKey="value"
+                                            isAnimationActive={false}
+                                        >
+                                            {estadoData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip content={<CustomPieTooltip />} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="doughnut-center-layer">
+                                <div className="center-number">{totalProductosCard}</div>
+                                <div className="center-text">TOTAL</div>
                             </div>
                         </div>
+
                         <div className="legend-grid-pro">
                             <div className="legend-item-pro">
-                                <span className="legend-color" style={{ background: '#6366f1' }}></span>
+                                <span className="legend-color" style={{ background: '#7c3aed' }}></span>
                                 <span className="legend-text">Activos</span>
                                 <span className="legend-value">{activos}</span>
                             </div>
@@ -298,43 +314,41 @@ const DashboardView = ({ productos }) => {
                         </div>
                     </div>
 
-                    {/* Actividad Reciente */}
-                    <div className="dashboard-card-pro activity-card">
+                    <div className="dashboard-card-pro alerts-card">
                         <div className="card-header-pro">
                             <h3>
-                                <i className="fas fa-clock"></i>
-                                Actividad Reciente
+                                <i className="fas fa-bell" style={{ color: '#3b82f6' }}></i>
+                                Alertas de Stock Bajo
                             </h3>
                         </div>
-                        <div className="activity-list-pro">
-                            {actividadReciente.length === 0 ? (
-                                <div className="empty-activity">
-                                    <i className="fas fa-inbox"></i>
-                                    <p>Sin actividad</p>
+
+                        <div className="alerts-list">
+                            {stockBajo.length === 0 && (
+                                <div className="alert-row clean-state">
+                                    <i className="fas fa-check-circle" style={{ color: '#22c55e' }}></i>
+                                    <span>Sin alertas activas</span>
                                 </div>
-                            ) : (
-                                actividadReciente.map(producto => (
-                                    <div key={producto.id} className="activity-item-pro">
-                                        <div className="activity-icon-wrapper">
-                                            {parseInt(producto.stock) < 5 ? (
-                                                <i className="fas fa-exclamation-circle" style={{ color: '#f59e0b' }}></i>
-                                            ) : (
-                                                <i className="fas fa-box" style={{ color: '#6366f1' }}></i>
-                                            )}
-                                        </div>
-                                        <div className="activity-content">
-                                            <div className="activity-title">{producto.nombre}</div>
-                                            <div className="activity-meta">Stock: {producto.stock} unidades</div>
-                                        </div>
-                                        <div className={`activity-status ${parseInt(producto.stock) < 5 ? 'low' : 'normal'}`}>
-                                            {parseInt(producto.stock) < 5 ? 'Bajo' : 'OK'}
+                            )}
+
+                            {stockBajo.slice(0, 4).map((producto) => (
+                                <div key={producto.id} className="alert-row">
+                                    <div className="alert-main">
+                                        <span className="alert-icon-wrap">
+                                            <i className="fas fa-triangle-exclamation"></i>
+                                        </span>
+                                        <div>
+                                            <p className="alert-name">{producto.nombre}</p>
+                                            <p className="alert-sub">Stock actual: {producto.stock}</p>
                                         </div>
                                     </div>
-                                ))
-                            )}
+                                    <span className="alert-check">
+                                        <i className="fas fa-check"></i>
+                                    </span>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                </div>
+                </aside>
             </div>
         </div>
     );

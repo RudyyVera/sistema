@@ -4,12 +4,11 @@ import StatsCards from './StatsCards';
 import './ProductsView.css';
 
 const ProductsView = ({ 
-    productos,  // Array filtrado para la tabla
-    allProductos,  // Array completo para las StatsCards
+    productos,
+    allProductos,
     onProductUpdated, 
     onProductDeleted, 
     onProductCreated,
-    searchTerm,
     estadoFilter,
     onFilterChange 
 }) => {
@@ -22,7 +21,6 @@ const ProductsView = ({
         }
     };
 
-    // Usar allProductos para las stats, si no existe usar productos
     const statsProductos = allProductos || productos;
 
     return (
